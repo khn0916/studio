@@ -6,7 +6,7 @@
 <title>짤·카드 스튜디오 - Studio UI</title>
 <style>
   :root {
-    --bg-light: #f0f2f5; /* 3번: 배경을 밝게 */
+    --bg-light: #f0f2f5; 
     --panel-bg: #ffffff;
     --text-dark: #333333;
     --border-color: #e0e0e0;
@@ -14,7 +14,7 @@
   }
   body {
     margin: 0;
-    background-color: var(--bg-light); /* 3번: 배경을 밝게 */
+    background-color: var(--bg-light); 
     color: var(--text-dark);
     font-family: 'Pretendard', sans-serif;
     height: 100vh;
@@ -55,75 +55,6 @@
     overflow: hidden;
   }
 
-  /* 왼쪽: 컬러링 패널 */
-  .left-panel {
-    width: 120px;
-    background: var(--panel-bg);
-    border-right: 1px solid var(--border-color);
-    padding: 15px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    z-index: 10;
-  }
-  
-  /* 컬러 휠 */
-  .color-wheel {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: conic-gradient(
-      red, yellow, lime, cyan, blue, magenta, red
-    );
-    position: relative;
-    cursor: crosshair;
-    border: 4px solid #f0f0f0;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
-  }
-  .color-wheel::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 50%;
-    height: 50%;
-    background: var(--panel-bg);
-    border-radius: 50%;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-  }
-  .color-current {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid #ccc;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-  
-  /* 2번: 사용기록 (사용자 지정 -> 사용기록) */
-  .history-title {
-    font-size: 0.8rem;
-    color: #888;
-    width: 100%;
-    text-align: left;
-    margin-top: 10px;
-  }
-  .history-palette {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    width: 100%;
-  }
-  .history-palette div {
-    aspect-ratio: 1;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 1px solid #ddd;
-    transition: transform 0.1s;
-  }
-  .history-palette div:hover { transform: scale(1.1); }
-
   /* 중앙: 메인 캔버스 */
   .center-panel {
     flex: 1;
@@ -131,7 +62,7 @@
     justify-content: center;
     align-items: center;
     padding: 30px;
-    background: #e9ecef; /* 중앙 배경도 밝게 */
+    background: #e9ecef;
     position: relative;
   }
   .canvas-wrapper {
@@ -148,6 +79,7 @@
     overflow: hidden;
     transition: 0.3s;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    cursor: pointer; /* 클릭 가능하게 커서 변경 */
   }
   .canvas-wrapper.drag-over {
     border-color: var(--accent);
@@ -157,7 +89,7 @@
   .upload-guide {
     text-align: center;
     color: #999;
-    pointer-events: none;
+    pointer-events: none; /* 클릭 통과 */
   }
   .upload-guide svg { width: 50px; height: 50px; margin-bottom: 10px; fill: #ccc; }
 
@@ -167,6 +99,7 @@
     width: 100%; height: 100%;
     object-fit: contain;
     display: none;
+    pointer-events: none; /* 이미지가 클릭 방해 안 하게 */
   }
   
   .text-layer {
@@ -182,6 +115,7 @@
     user-select: none;
     padding: 5px;
     z-index: 10;
+    pointer-events: auto; /* 텍스트는 클릭 가능하게 */
   }
   .text-layer.active {
     outline: 2px dashed #333;
@@ -189,19 +123,87 @@
 
   /* 오른쪽: 기능성 패널 */
   .right-panel {
-    width: 250px;
+    width: 280px;
     background: var(--panel-bg);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
   }
   
+  /* ── 색상 및 사용기록 영역 (상단으로 이동) ── */
+  .color-section {
+    padding: 20px;
+    background: #f9f9f9;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  .color-section .title { font-size: 0.9rem; font-weight: bold; color: #555; align-self: flex-start; }
+  
+  .color-wheel {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+      red, yellow, lime, cyan, blue, magenta, red
+    );
+    position: relative;
+    cursor: crosshair;
+    border: 4px solid #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .color-wheel::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 50%;
+    background: #f9f9f9;
+    border-radius: 50%;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  }
+  .color-current {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .history-title {
+    font-size: 0.8rem;
+    color: #888;
+    width: 100%;
+    text-align: left;
+    margin-top: 5px;
+  }
+  .history-palette {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+  .history-palette div {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    transition: transform 0.1s;
+  }
+  .history-palette div:hover { transform: scale(1.1); }
+
+  /* ── 아코디언 도구들 ── */
   .accordion {
     border-bottom: 1px solid var(--border-color);
   }
   .accordion-header {
     padding: 15px;
-    background: #f9f9f9;
+    background: #ffffff;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -222,7 +224,7 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
-    background: var(--panel-bg);
+    background: #fafafa;
     padding: 0 15px;
   }
   .accordion.open .accordion-content {
@@ -321,21 +323,9 @@
   <!-- 메인 레이아웃 -->
   <div class="main-container">
     
-    <!-- 왼쪽: 컬러링 패널 -->
-    <div class="left-panel">
-      <div style="font-size:0.8rem; color:#888;">색상</div>
-      <div class="color-wheel" id="colorWheel"></div>
-      <div class="color-current" id="currentColor"></div>
-      
-      <!-- 2번: 사용자 지정 -> 사용기록 -->
-      <div class="history-title">사용기록</div>
-      <div class="history-palette" id="historyPalette">
-        <!-- 자바스크립트로 채워짐 -->
-      </div>
-    </div>
-
     <!-- 중앙: 메인 캔버스 -->
     <div class="center-panel">
+      <!-- 클릭 이벤트를 확실히 하기 위해 label로 감쌈 -->
       <div class="canvas-wrapper" id="canvasWrapper">
         <!-- 업로드 유도 -->
         <div class="upload-guide" id="uploadGuide">
@@ -351,9 +341,19 @@
       </div>
     </div>
 
-    <!-- 오른쪽: 기능성 패널 (아코디언) -->
+    <!-- 오른쪽: 기능성 패널 + 색상 -->
     <div class="right-panel">
       
+      <!-- 1번: 색상 및 사용기록 상단으로 이동 -->
+      <div class="color-section">
+        <div class="title">색상</div>
+        <div class="color-wheel" id="colorWheel"></div>
+        <div class="color-current" id="currentColor"></div>
+        
+        <div class="history-title">사용기록</div>
+        <div class="history-palette" id="historyPalette"></div>
+      </div>
+
       <!-- 펜 도구 -->
       <div class="accordion" id="accPen">
         <div class="accordion-header">
@@ -446,15 +446,16 @@
   fileInput.type = 'file';
   fileInput.accept = 'image/png, image/jpeg';
 
-  /* ── 1. 아코디언 메뉴 접었다 펴기 ── */
+  /* ── 아코디언 메뉴 ── */
   document.querySelectorAll('.accordion-header').forEach(header => {
     header.addEventListener('click', () => {
       header.parentElement.classList.toggle('open');
     });
   });
 
-  /* ── 2. 드래그 앤 드롭 및 클릭 이미지 업로드 ── */
-  canvasWrapper.addEventListener('click', () => {
+  /* ── 2번: 이미지 업로드 (클릭 및 드래그) ── */
+  // 이미지가 없을 때만 파일 선택창 열기
+  canvasWrapper.addEventListener('click', (e) => {
     if (mainImage.style.display === 'none') {
       fileInput.click();
     }
@@ -496,23 +497,20 @@
     reader.readAsDataURL(file);
   }
 
-  /* ── 3. 컬러 휠 제어 (1번: 각도 오류 수정) ── */
+  /* ── 컬러 휠 제어 ── */
   const colorWheel = document.getElementById('colorWheel');
   
   colorWheel.addEventListener('mousedown', (e) => {
     const rect = colorWheel.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
-    // Y축을 반전시켜서 12시 방향이 기준이 되게 함 (위쪽이 -, 아래쪽이 +)
     const y = -(e.clientY - rect.top - rect.height / 2); 
     const dist = Math.sqrt(x*x + y*y);
     
-    if (dist > 20 && dist < 50) {
+    if (dist > 25 && dist < 60) {
       let angle = Math.atan2(y, x) * (180 / Math.PI);
       if (angle < 0) angle += 360;
       
-      // 12시가 빨간색(0도)이 되도록 보정
       let hue = (90 - angle + 360) % 360;
-      
       setColor(hslToHex(hue, 100, 50));
     }
   });
@@ -528,8 +526,8 @@
     return `#${f(0)}${f(8)}${f(4)}`;
   }
 
-  /* ── 2번: 사용기록 기능 추가 ── */
-  let colorHistory = ['#FFFFFF', '#000000', '#E1002A']; // 초기 색상
+  /* ── 사용기록 ── */
+  let colorHistory = ['#FFFFFF', '#000000', '#E1002A'];
 
   function updateHistoryPalette() {
     historyPalette.innerHTML = '';
@@ -543,13 +541,11 @@
   }
 
   function setColor(hex) {
-    // 대문자로 통일하고, 이미 있으면 맨 앞으로, 없으면 추가
     hex = hex.toUpperCase();
     if (colorHistory.indexOf(hex) === -1) {
       colorHistory.unshift(hex);
-      if (colorHistory.length > 8) colorHistory.pop(); // 최대 8개 유지
+      if (colorHistory.length > 12) colorHistory.pop();
     } else {
-      // 이미 있으면 맨 앞으로 이동
       colorHistory = [hex, ...colorHistory.filter(c => c !== hex)];
     }
     
@@ -557,14 +553,13 @@
     currentColorDiv.style.background = hex;
     updateHistoryPalette();
 
-    // 텍스트가 활성화되어 있으면 색상 변경
     if (textLayer.style.display === 'block') {
       textLayer.style.color = hex;
     }
   }
-  updateHistoryPalette(); // 초기화
+  updateHistoryPalette();
 
-  /* ── 4. 텍스트 기능 ── */
+  /* ── 텍스트 기능 ── */
   document.getElementById('btnAddText').addEventListener('click', () => {
     textLayer.textContent = textInput.value || '텍스트를 입력하세요';
     textLayer.style.fontSize = sizeInput.value + 'px';
@@ -575,7 +570,7 @@
       textLayer.style.left = '50%';
       textLayer.style.top = '50%';
     }
-    setColor(currentColor); // 사용기록에 추가
+    setColor(currentColor);
   });
 
   sizeInput.addEventListener('input', () => {
@@ -590,7 +585,7 @@
     }
   });
 
-  /* ── 5. 드래그로 텍스트 위치 이동 ── */
+  /* ── 드래그로 텍스트 위치 이동 ── */
   let isDragging = false;
   let startX, startY;
   let textX = 50, textY = 50;
@@ -625,7 +620,7 @@
     textLayer.classList.remove('active');
   });
 
-  /* ── 6. 완성하기 버튼 ── */
+  /* ── 완성하기 버튼 ── */
   document.getElementById('btnComplete').addEventListener('click', () => {
     if (mainImage.style.display === 'none') {
       alert('먼저 이미지를 불러와주세요!');
