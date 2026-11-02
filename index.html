@@ -107,10 +107,14 @@
   .insta-nick { font-weight: bold; font-size: .95rem; }
   .insta-main { width: 100%; aspect-ratio: 1 / 1; background: #000; }
   .insta-main img { width: 100%; height: 100%; object-fit: cover; }
-  .insta-footer { padding: 12px 16px; display: flex; justify-content: space-between; align-items: flex-end; }
-  .insta-actions { display: flex; gap: 15px; margin-bottom: 8px; font-size: 1.5rem; }
-  .insta-caption { font-size: .9rem; line-height: 1.4; flex: 1; }
+  
+  .insta-footer { padding: 12px 16px; }
+  /* 하단 아이콘과 캡션 영역 묶음 */
+  .insta-info { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px; }
+  .insta-actions { display: flex; gap: 15px; font-size: 1.5rem; margin-bottom: 8px; }
+  .insta-caption { font-size: .9rem; line-height: 1.4; }
   .insta-caption span { color: #00376b; }
+  
   .btn-insta-download { padding: 8px 12px; background: #00376b; color: white; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
   
   .close-modal { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; }
@@ -201,11 +205,15 @@
     <div class="insta-modal">
       <div class="insta-header"><div class="insta-profile">🦋</div><div class="insta-nick">ALEPH_Studio</div></div>
       <div class="insta-main"><img id="instaResultImg" alt="완성된 짤"></div>
+      
+      <!-- 구조 수정됨: 아이콘 -> 캡션+버튼 -->
       <div class="insta-footer">
-        <div class="insta-caption"><b>ALEPH_Studio</b> 제가 만들었어요! <br><span>#SKTagram #CardStudio</span></div>
-        <button class="btn-insta-download" id="btnModalDownload">💾 다운로드</button>
+        <div class="insta-actions">❤️ 💬 ✈️</div>
+        <div class="insta-info">
+          <div class="insta-caption"><b>ALEPH_Studio</b> 제가 만들었어요!<br><span>#SKTagram #CardStudio</span></div>
+          <button class="btn-insta-download" id="btnModalDownload">💾 다운로드</button>
+        </div>
       </div>
-      <div class="insta-actions" style="padding: 0 16px 12px;">❤️ 💬 ✈️</div>
     </div>
   </div>
 
@@ -379,7 +387,7 @@
     return c.toDataURL('image/png');
   }
 
-  /* ── 1번: 인스타 피드 전체 캡처 (버튼 제외) ── */
+  /* ── 1번: 인스타 피드 전체 캡처 (버튼 제외 및 순서 복구) ── */
   function captureInstaFeed(mainImageDataUrl) {
     return new Promise((resolve) => {
       const feedWidth = 400;
@@ -437,25 +445,25 @@
         
         ctx.drawImage(imgObj, sx, sy, sWidth, sHeight, 0, headerHeight, imageSize, imageSize);
 
-        // 4. 하단 (아이콘 및 캡션)
+        // 4. 하단 영역 그리기 (순서 복구!)
         const footerY = headerHeight + imageSize;
         
+        // [1] 아이콘 (하트, 댓글, 비행기) - 맨 위
         ctx.font = '20px Arial';
-        ctx.fillStyle = '#000'; // 아이콘 색상 초기화
+        ctx.fillStyle = '#000'; 
         ctx.fillText('❤️', 15, footerY + 25);
         ctx.fillText('💬', 50, footerY + 25);
         ctx.fillText('✈️', 85, footerY + 25);
 
+        // [2] 캡션 (닉네임, 내용, 태그) - 아이콘 아래
         ctx.font = 'bold 13px "Pretendard", sans-serif';
         ctx.fillText('ALEPH_Studio', 15, footerY + 60);
         ctx.font = '13px "Pretendard", sans-serif';
         ctx.fillStyle = '#333';
-        ctx.fillText('우나 야하!', 105, footerY + 60);
+        ctx.fillText('제가 만들었어요!', 105, footerY + 60);
         
         ctx.fillStyle = '#00376b';
         ctx.fillText('#SKTagram #CardStudio', 15, footerY + 85);
-
-        // 버튼 그리는 코드 삭제됨 (깔끔한 피드 이미지)
 
         resolve(c.toDataURL('image/png'));
       };
