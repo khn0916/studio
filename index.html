@@ -3,406 +3,667 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>짤·카드 스튜디오</title>
+<title>짤·카드 스튜디오 - Studio UI</title>
 <style>
   :root {
-    --bg-color: #f4f4f6;
-    --card-bg: #ffffff;
-    --text-color: #333;
-    --border-color: #ddd;
-    --accent-color: #E1002A; /* SKT Red */
+    --bg-dark: #222;
+    --panel-bg: #333;
+    --text-light: #eee;
+    --border-color: #444;
+    --accent: #E1002A;
   }
   body {
     margin: 0;
-    padding: 20px;
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     font-family: 'Pretendard', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    box-sizing: border-box;
-  }
-  .container {
-    display: flex;
-    gap: 40px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 1200px;
-    width: 100%;
-  }
-
-  /* ── 왼쪽: 편집 도구 (Control Panel) ── */
-  .control-panel {
-    flex: 1;
-    min-width: 320px;
-    max-width: 500px;
-    background: var(--card-bg);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-  }
-  .control-panel h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.5rem;
-    color: #111;
-  }
-  
-  .section-title {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin-bottom: 8px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 5px;
+    overflow: hidden;
   }
 
-  /* 파일 업로드 */
-  .file-upload {
-    border: 2px dashed var(--border-color);
-    padding: 20px;
-    text-align: center;
-    border-radius: 8px;
+  /* ── 상단 바 ── */
+  .top-bar {
+    height: 60px;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .top-bar h1 { font-size: 1.2rem; margin: 0; }
+  .btn-complete {
+    padding: 8px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
     cursor: pointer;
+    font-size: 1rem;
     transition: 0.2s;
   }
-  .file-upload:hover { border-color: var(--accent-color); }
-  .file-upload input { display: none; }
-  .file-name {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  .error-msg {
-    color: red;
-    font-size: 0.9rem;
-    margin-top: 5px;
-    display: none;
-  }
+  .btn-complete:hover { filter: brightness(1.2); }
 
-  /* 텍스트 편집 */
-  .form-group {
+  /* ── 메인 레이아웃 ── */
+  .main-container {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .form-group label { font-size: 0.95rem; font-weight: bold; }
-  input[type="text"], input[type="range"], input[type="color"] {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-family: inherit;
-  }
-  input[type="color"] { padding: 2px; cursor: pointer; height: 40px; }
-  
-  .row { display: flex; gap: 15px; align-items: center; }
-  .row input[type="range"] { flex: 1; }
-
-  /* ── 오른쪽: 미리보기 (Preview) ── */
-  .preview-panel {
     flex: 1;
-    min-width: 320px;
-    max-width: 500px;
+    overflow: hidden;
+  }
+
+  /* 왼쪽: 컬러링 패널 */
+  .left-panel {
+    width: 120px;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 15px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 20px;
   }
-  .preview-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #555;
-  }
-
-  /* 인스타 피드 모양 */
-  .instagram-card {
-    background: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    width: 100%;
-    max-width: 450px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    overflow: hidden;
-  }
-  .insta-header {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    gap: 12px;
-    border-bottom: 1px solid #eee;
-  }
-  .insta-profile-img {
-    width: 40px;
-    height: 40px;
+  
+  /* 간이 컬러 휠 (CSS로 원형 그라데이션) */
+  .color-wheel {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: #ddd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    overflow: hidden;
-  }
-  .insta-profile-img img { width: 100%; height: 100%; object-fit: cover; }
-  .insta-nickname { font-weight: bold; font-size: 0.95rem; }
-  .insta-more { margin-left: auto; font-weight: bold; cursor: pointer; }
-
-  .insta-main-image {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: conic-gradient(
+      red, yellow, lime, cyan, blue, magenta, red
+    );
     position: relative;
-    overflow: hidden;
+    cursor: crosshair;
+    border: 4px solid #222;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
   }
-  /* 이미지가 없을 때 표시되는 안내 */
-  .placeholder-text {
-    color: #aaa;
-    font-size: 1rem;
-    text-align: center;
-    padding: 20px;
+  .color-wheel::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 50%;
+    background: var(--panel-bg);
+    border-radius: 50%;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
   }
-  /* 실제 이미지 */
-  #previewImg {
+  .color-current {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #888;
+  }
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+  }
+  .palette div {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #555;
+  }
+
+  /* 중앙: 메인 캔버스 */
+  .center-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    background: #1a1a1a;
+    position: relative;
+  }
+  .canvas-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
+    background: #2a2a2a;
+    border: 2px dashed #555;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: 0.3s;
+  }
+  .canvas-wrapper.drag-over {
+    border-color: var(--accent);
+    background: rgba(225, 0, 42, 0.1);
+  }
+  
+  /* 업로드 안내 */
+  .upload-guide {
+    text-align: center;
+    color: #888;
+    pointer-events: none;
+  }
+  .upload-guide svg { width: 50px; height: 50px; margin-bottom: 10px; fill: #666; }
+
+  /* 실제 이미지 */
+  #mainImage {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
     display: none;
   }
-  /* 이미지 위에 얹히는 텍스트 */
-  #overlayText {
+  /* 편집 가능한 텍스트 */
+  .text-layer {
     position: absolute;
     color: white;
     font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    font-size: 40px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    cursor: move;
     white-space: nowrap;
-    pointer-events: none; /* 드래그 방지 */
-    text-align: center;
-    transform: translate(-50%, -50%); /* 중앙 정렬 */
+    transform: translate(-50%, -50%);
     display: none;
+    user-select: none;
+    padding: 5px;
+  }
+  .text-layer.active {
+    outline: 2px dashed white;
   }
 
-  .insta-actions {
-    padding: 12px 16px;
+  /* 오른쪽: 기능성 패널 */
+  .right-panel {
+    width: 250px;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--border-color);
     display: flex;
-    gap: 15px;
-    font-size: 1.5rem;
+    flex-direction: column;
   }
-  .insta-actions span { cursor: pointer; }
-  .insta-caption {
-    padding: 0 16px 16px 16px;
-    font-size: 0.9rem;
-    line-height: 1.4;
+  
+  .accordion {
+    border-bottom: 1px solid var(--border-color);
   }
-  .insta-caption b { color: #111; }
-  .tag { color: #00376b; }
+  .accordion-header {
+    padding: 15px;
+    background: #2a2a2a;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    user-select: none;
+  }
+  .accordion-header:hover { background: #383838; }
+  .accordion-header .arrow {
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+  }
+  .accordion.open .arrow { transform: rotate(180deg); }
+  
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: #222;
+    padding: 0 15px;
+  }
+  .accordion.open .accordion-content {
+    max-height: 300px;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  /* 도구 공통 */
+  .tool-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: 0.2s;
+  }
+  .tool-btn:hover { background: #555; }
+  .tool-btn.active { background: var(--accent); }
+  
+  .input-group { margin-bottom: 15px; }
+  .input-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #bbb; }
+  .input-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    background: #111;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  .input-group input[type="range"] { width: 100%; }
+
+  /* ── 인스타 피드 모달 ── */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+  .modal-overlay.show { display: flex; }
+  
+  .insta-modal {
+    background: white;
+    color: black;
+    width: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: slideUp 0.3s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .insta-header {
+    display: flex; align-items: center; padding: 12px 16px; gap: 12px; border-bottom: 1px solid #eee;
+  }
+  .insta-profile {
+    width: 36px; height: 36px; border-radius: 50%; background: #ddd;
+    display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
+  }
+  .insta-nick { font-weight: bold; font-size: 0.95rem; }
+  
+  .insta-main {
+    width: 100%; aspect-ratio: 1/1; background: #000;
+    display: flex; justify-content: center; align-items: center;
+  }
+  .insta-main img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .insta-footer { padding: 12px 16px; }
+  .insta-actions { display: flex; gap: 15px; font-size: 1.5rem; margin-bottom: 8px; }
+  .insta-caption { font-size: 0.9rem; line-height: 1.4; }
+  .close-modal {
+    position: absolute; top: 20px; right: 20px;
+    background: none; border: none; color: white; font-size: 2rem; cursor: pointer;
+  }
 
 </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <!-- 왼쪽: 편집 도구 -->
-  <div class="control-panel">
-    <h2>Card Studio</h2>
+  <!-- 상단 바 -->
+  <div class="top-bar">
+    <h1>Card Studio</h1>
+    <button class="btn-complete" id="btnComplete">완성하기</button>
+  </div>
+
+  <!-- 메인 레이아웃 -->
+  <div class="main-container">
     
-    <div>
-      <div class="section-title">1. 배경 이미지</div>
-      <label class="file-upload" for="imageInput">
-        <div>📂 클릭해서 이미지 불러오기</div>
-        <div style="font-size:0.8rem; color:#888; margin-top:5px;">PNG, JPEG 파일만 지원</div>
-        <input type="file" id="imageInput" accept="image/png, image/jpeg">
-      </label>
-      <div class="file-name" id="fileName">선택된 파일 없음</div>
-      <div class="error-msg" id="errorMsg">지원하지 않는 파일입니다. PNG 또는 JPEG를 선택해주세요.</div>
+    <!-- 왼쪽: 컬러링 패널 -->
+    <div class="left-panel">
+      <div style="font-size:0.8rem; color:#888;">색상</div>
+      <div class="color-wheel" id="colorWheel"></div>
+      <div class="color-current" id="currentColor"></div>
+      
+      <div style="font-size:0.8rem; color:#888; width:100%; text-align:left; margin-top:10px;">사용자 지정</div>
+      <div class="palette">
+        <div style="background:#E1002A;" onclick="setColor('#E1002A')"></div>
+        <div style="background:#FF7A00;" onclick="setColor('#FF7A00')"></div>
+        <div style="background:#FFFFFF;" onclick="setColor('#FFFFFF')"></div>
+        <div style="background:#000000;" onclick="setColor('#000000')"></div>
+        <div style="background:#004488;" onclick="setColor('#004488')"></div>
+        <div style="background:#00FF00;" onclick="setColor('#00FF00')"></div>
+      </div>
     </div>
 
-    <div>
-      <div class="section-title">2. 문구 편집</div>
-      <div class="form-group">
-        <label for="textInput">문구 입력</label>
-        <input type="text" id="textInput" placeholder="여기에 문구를 입력하세요" maxlength="30">
+    <!-- 중앙: 메인 캔버스 -->
+    <div class="center-panel">
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <!-- 업로드 유도 -->
+        <div class="upload-guide" id="uploadGuide">
+          <svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" /></svg>
+          <p>이미지를 드래그하거나<br>클릭해서 불러오세요.</p>
+        </div>
+        
+        <!-- 실제 이미지 -->
+        <img id="mainImage" src="" alt="메인 이미지">
+        
+        <!-- 텍스트 레이어 -->
+        <div class="text-layer" id="textLayer">텍스트를 입력하세요</div>
       </div>
+    </div>
+
+    <!-- 오른쪽: 기능성 패널 (아코디언) -->
+    <div class="right-panel">
       
-      <div class="form-group" style="margin-top: 15px;">
-        <label>크기 조절</label>
-        <div class="row">
-          <input type="range" id="sizeInput" min="10" max="100" value="40">
-          <span id="sizeValue" style="width: 40px; text-align: right;">40px</span>
+      <!-- 펜 도구 -->
+      <div class="accordion" id="accPen">
+        <div class="accordion-header">
+          <span>🖊️ 펜 (그리기)</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="accordion-content">
+          <button class="tool-btn" onclick="alert('펜 기능은 다음 업데이트에!')">자유 곡선</button>
+          <button class="tool-btn" onclick="alert('펜 기능은 다음 업데이트에!')">직선</button>
         </div>
       </div>
 
-      <div class="form-group" style="margin-top: 15px;">
-        <label>색상 선택</label>
-        <input type="color" id="colorInput" value="#ffffff">
+      <!-- 이모지 도구 -->
+      <div class="accordion" id="accEmoji">
+        <div class="accordion-header">
+          <span>😊 이모지</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="accordion-content">
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <span style="font-size:1.5rem; cursor:pointer;" onclick="alert('이모지 기능 준비 중!')">😈</span>
+            <span style="font-size:1.5rem; cursor:pointer;" onclick="alert('이모지 기능 준비 중!')">🤺</span>
+            <span style="font-size:1.5rem; cursor:pointer;" onclick="alert('이모지 기능 준비 중!')">🔥</span>
+            <span style="font-size:1.5rem; cursor:pointer;" onclick="alert('이모지 기능 준비 중!')">💖</span>
+          </div>
+        </div>
       </div>
+
+      <!-- 텍스트 도구 -->
+      <div class="accordion" id="accText">
+        <div class="accordion-header">
+          <span>🔤 텍스트 추가</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="accordion-content">
+          <div class="input-group">
+            <label>내용</label>
+            <input type="text" id="textInput" placeholder="문구 입력" value="텍스트를 입력하세요">
+          </div>
+          <div class="input-group">
+            <label>크기</label>
+            <input type="range" id="sizeInput" min="10" max="100" value="40">
+          </div>
+          <button class="tool-btn" id="btnAddText" style="text-align:center; background:var(--accent);">텍스트 얹기</button>
+        </div>
+      </div>
+
     </div>
+
   </div>
 
-  <!-- 오른쪽: 인스타그램 미리보기 -->
-  <div class="preview-panel">
-    <div class="preview-title">실시간 미리보기</div>
-    
-    <div class="instagram-card">
-      <!-- 헤더 -->
+  <!-- 인스타 피드 모달 -->
+  <div class="modal-overlay" id="modal">
+    <button class="close-modal" id="btnCloseModal">×</button>
+    <div class="insta-modal">
       <div class="insta-header">
-        <div class="insta-profile-img">😈</div>
-        <div class="insta-nickname">ALEPH_Studio</div>
-        <div class="insta-more">···</div>
+        <div class="insta-profile">😈</div>
+        <div class="insta-nick">ALEPH_Studio</div>
       </div>
-      
-      <!-- 메인 이미지 영역 -->
-      <div class="insta-main-image" id="imageContainer">
-        <div class="placeholder-text">이미지를 불러오면<br>여기에 표시됩니다.</div>
-        <img id="previewImg" src="" alt="미리보기 이미지">
-        
-        <!-- 이미지 위 텍스트 -->
-        <div id="overlayText">텍스트</div>
+      <div class="insta-main">
+        <!-- 캔버스 내용이 이미지로 들어갈 자리 -->
+        <img id="instaResultImg" src="" alt="완성된 짤">
       </div>
-      
-      <!-- 하단 액션 및 캡션 -->
-      <div class="insta-actions">
-        <span>❤️</span><span>💬</span><span>✈️</span>
-      </div>
-      <div class="insta-caption">
-        <b>ALEPH_Studio</b> 오늘도 즐거운 코딩!<br>
-        <span class="tag">#ALEPH_Studio</span>
+      <div class="insta-footer">
+        <div class="insta-actions">❤️ 💬 ✈️</div>
+        <div class="insta-caption">
+          <b>ALEPH_Studio</b> 완성된 짤입니다!<br>
+          <span style="color:#00376b;">#ALEPH_Studio #CardStudio</span>
+        </div>
       </div>
     </div>
   </div>
-
-</div>
 
 <script>
-  const imageInput = document.getElementById('imageInput');
-  const fileName = document.getElementById('fileName');
-  const errorMsg = document.getElementById('errorMsg');
-  
-  const previewImg = document.getElementById('previewImg');
-  const placeholderText = document.querySelector('.placeholder-text');
-  const overlayText = document.getElementById('overlayText');
+  /* ── 전역 변수 ── */
+  const canvasWrapper = document.getElementById('canvasWrapper');
+  const mainImage = document.getElementById('mainImage');
+  const uploadGuide = document.getElementById('uploadGuide');
+  const textLayer = document.getElementById('textLayer');
+  const currentColorDiv = document.getElementById('currentColor');
   
   const textInput = document.getElementById('textInput');
   const sizeInput = document.getElementById('sizeInput');
-  const sizeValue = document.getElementById('sizeValue');
-  const colorInput = document.getElementById('colorInput');
+  
+  const modal = document.getElementById('modal');
+  const instaResultImg = document.getElementById('instaResultImg');
+  
+  let currentColor = '#FFFFFF';
+  let fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/png, image/jpeg';
 
-  // 텍스트 초기 위치 (중앙)
-  let textPos = { x: 50, y: 50 }; // 퍼센트(%)
+  /* ── 1. 아코디언 메뉴 접었다 펴기 ── */
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const parent = header.parentElement;
+      // 다른 열린 아코디언 닫기 (선택사항)
+      // document.querySelectorAll('.accordion').forEach(acc => {
+      //   if (acc !== parent) acc.classList.remove('open');
+      // });
+      parent.classList.toggle('open');
+    });
+  });
 
-  // ── 파일 업로드 처리 ──
-  imageInput.addEventListener('change', (e) => {
+  /* ── 2. 드래그 앤 드롭 및 클릭 이미지 업로드 ── */
+  canvasWrapper.addEventListener('click', () => {
+    if (mainImage.style.display === 'none') {
+      fileInput.click();
+    }
+  });
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    canvasWrapper.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  canvasWrapper.addEventListener('dragenter', () => canvasWrapper.classList.add('drag-over'));
+  canvasWrapper.addEventListener('dragleave', () => canvasWrapper.classList.remove('drag-over'));
+  
+  canvasWrapper.addEventListener('drop', (e) => {
+    canvasWrapper.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  
+  fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    
-    // 파일이 선택되지 않았으면 리턴
-    if (!file) return;
+    if (file) handleFile(file);
+  });
 
-    // T03-C09, T03-C10: 지원하지 않는 파일 거부 및 이유 표시
+  function handleFile(file) {
+    // 지원하지 않는 파일 거부
     if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
-      errorMsg.style.display = 'block';
-      fileName.textContent = '지원하지 않는 파일 형식';
-      // 기존 작업 유지를 위해 return (이미지 변경 안 함)
-      imageInput.value = ''; // input 초기화
+      alert('지원하지 않는 파일 형식입니다. PNG 또는 JPEG 파일만 사용 가능합니다.');
       return;
     }
-
-    // 정상 파일이면 에러 메시지 숨김
-    errorMsg.style.display = 'none';
-    fileName.textContent = file.name;
-
-    // FileReader로 이미지 읽기
+    
     const reader = new FileReader();
-    reader.onload = (event) => {
-      previewImg.src = event.target.result;
-      previewImg.style.display = 'block';
-      placeholderText.style.display = 'none';
-      
-      // 텍스트가 입력되어 있으면 보이게 함
-      if (textInput.value.trim() !== '') {
-        overlayText.style.display = 'block';
-      }
+    reader.onload = (e) => {
+      mainImage.src = e.target.result;
+      mainImage.style.display = 'block';
+      uploadGuide.style.display = 'none';
     };
     reader.readAsDataURL(file);
-  });
-
-  // ── 텍스트 입력 처리 (T03-C06: 즉시 반영) ──
-  textInput.addEventListener('input', (e) => {
-    const text = e.target.value;
-    overlayText.textContent = text;
-    
-    if (text.trim() === '') {
-      overlayText.style.display = 'none';
-    } else {
-      overlayText.style.display = 'block';
-    }
-    updateTextStyle();
-  });
-
-  // ── 텍스트 크기 변경 (T03-C07: 즉시 반영) ──
-  sizeInput.addEventListener('input', (e) => {
-    const size = e.target.value;
-    sizeValue.textContent = size + 'px';
-    overlayText.style.fontSize = size + 'px';
-  });
-
-  // ── 텍스트 색상 변경 (T03-C08: 즉시 반영) ──
-  colorInput.addEventListener('input', (e) => {
-    overlayText.style.color = e.target.value;
-  });
-
-  // ── 텍스트 위치 업데이트 ──
-  function updateTextStyle() {
-    overlayText.style.left = textPos.x + '%';
-    overlayText.style.top = textPos.y + '%';
   }
 
-  // 마우스 드래그로 텍스트 위치 이동 (스케치의 '위치 변경' 구현)
+  /* ── 3. 컬러 휠 제어 (간단한 링 클릭 구현) ── */
+  const colorWheel = document.getElementById('colorWheel');
+  colorWheel.addEventListener('mousedown', (e) => {
+    const rect = colorWheel.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const dist = Math.sqrt(x*x + y*y);
+    
+    // 링 영역(바깥쪽)을 클릭했을 때만 색상 추출
+    if (dist > 20 && dist < 50) {
+      let angle = Math.atan2(y, x) * (180 / Math.PI);
+      if (angle < 0) angle += 360;
+      
+      // 각도(0~360)를 HSL 색상(0~360)으로 변환
+      // 링은 상단이 빨간색이므로, 90도 회전 보정 필요
+      let hue = (angle - 90 + 360) % 360;
+      
+      const color = `hsl(${hue}, 100%, 50%)`;
+      // HSL을 HEX로 변환해서 저장 (원하면 사용)
+      setColor(hslToHex(hue, 100, 50));
+    }
+  });
+
+  // 간단 HSL to HEX 변환
+  function hslToHex(h, s, l) {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
+  function setColor(hex) {
+    currentColor = hex;
+    currentColorDiv.style.background = hex;
+    if (textLayer.style.display === 'block') {
+      textLayer.style.color = hex;
+    }
+  }
+  setColor('#FFFFFF'); // 초기화
+
+  /* ── 4. 텍스트 기능 ── */
+  document.getElementById('btnAddText').addEventListener('click', () => {
+    textLayer.textContent = textInput.value || '텍스트를 입력하세요';
+    textLayer.style.fontSize = sizeInput.value + 'px';
+    textLayer.style.color = currentColor;
+    textLayer.style.display = 'block';
+    
+    // 처음 추가될 때 중앙으로
+    if (!textLayer.style.left) {
+      textLayer.style.left = '50%';
+      textLayer.style.top = '50%';
+    }
+  });
+
+  // 텍스트 크기 변경 실시간 반영
+  sizeInput.addEventListener('input', () => {
+    if (textLayer.style.display === 'block') {
+      textLayer.style.fontSize = sizeInput.value + 'px';
+    }
+  });
+
+  // 텍스트 내용 변경 실시간 반영
+  textInput.addEventListener('input', () => {
+    if (textLayer.style.display === 'block') {
+      textLayer.textContent = textInput.value;
+    }
+  });
+
+  /* ── 5. 드래그로 텍스트 위치 이동 ── */
   let isDragging = false;
   let startX, startY;
-  const imageContainer = document.getElementById('imageContainer');
+  let textX = 50, textY = 50; // 퍼센트
 
-  imageContainer.addEventListener('mousedown', (e) => {
-    // 텍스트가 없으면 드래그 불가
-    if (textInput.value.trim() === '' || previewImg.style.display === 'none') return;
-    
-    // 클릭한 위치가 텍스트 근처인지 확인 (간단하게 컨테이너 내부 어디든 드래그 허용)
+  textLayer.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
+    textLayer.classList.add('active');
+    
+    const rect = canvasWrapper.getBoundingClientRect();
+    // 마우스 클릭 위치와 텍스트 중심 간의 오프셋 계산
+    startX = e.clientX - (rect.left + (textX / 100) * rect.width);
+    startY = e.clientY - (rect.top + (textY / 100) * rect.height);
   });
 
   window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     
-    // 움직인 거리 계산 (픽셀 -> 퍼센트)
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const rect = canvasWrapper.getBoundingClientRect();
     
-    const rect = imageContainer.getBoundingClientRect();
+    let newX = ((e.clientX - startX - rect.left) / rect.width) * 100;
+    let newY = ((e.clientY - startY - rect.top) / rect.height) * 100;
     
-    // 위치 업데이트 (0~100% 사이로 제한)
-    textPos.x = Math.max(0, Math.min(100, textPos.x + (dx / rect.width) * 100));
-    textPos.y = Math.max(0, Math.min(100, textPos.y + (dy / rect.height) * 100));
+    // 경계 제한 (0~100%)
+    textX = Math.max(0, Math.min(100, newX));
+    textY = Math.max(0, Math.min(100, newY));
     
-    updateTextStyle();
-    
-    // 시작점 갱신
-    startX = e.clientX;
-    startY = e.clientY;
+    textLayer.style.left = textX + '%';
+    textLayer.style.top = textY + '%';
   });
 
   window.addEventListener('mouseup', () => {
     isDragging = false;
+    textLayer.classList.remove('active');
   });
 
-  // 초기 위치 설정
-  updateTextStyle();
-</script>
+  /* ── 6. 완성하기 버튼 (캡처해서 모달 띄우기) ── */
+  document.getElementById('btnComplete').addEventListener('click', () => {
+    if (mainImage.style.display === 'none') {
+      alert('먼저 이미지를 불러와주세요!');
+      return;
+    }
 
+    // 캔버스에 현재 화면 그리기
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWrapper.clientWidth;
+    canvas.height = canvasWrapper.clientHeight;
+    const ctx = canvas.getContext('2d');
+    
+    // 1. 배경 이미지 (object-fit: contain 시뮬레이션)
+    const imgRatio = mainImage.naturalWidth / mainImage.naturalHeight;
+    const boxRatio = canvas.width / canvas.height;
+    let drawW, drawH, drawX, drawY;
+
+    if (imgRatio > boxRatio) {
+      drawW = canvas.width; drawH = canvas.width / imgRatio;
+      drawX = 0; drawY = (canvas.height - drawH) / 2;
+    } else {
+      drawH = canvas.height; drawW = canvas.height * imgRatio;
+      drawX = (canvas.width - drawW) / 2; drawY = 0;
+    }
+    ctx.drawImage(mainImage, drawX, drawY, drawW, drawH);
+
+    // 2. 텍스트 그리기 (텍스트 레이어의 스타일을 복사)
+    if (textLayer.style.display === 'block') {
+      const tX = (textX / 100) * canvas.width;
+      const tY = (textY / 100) * canvas.height;
+      
+      // 폰트 사이즈와 색상 가져오기
+      const fontSize = parseInt(window.getComputedStyle(textLayer).fontSize);
+      const fontColor = window.getComputedStyle(textLayer).color;
+      
+      ctx.font = `bold ${fontSize}px 'Pretendard', sans-serif`;
+      ctx.fillStyle = fontColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // 그림자 효과
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.fillText(textLayer.textContent, tX, tY);
+    }
+
+    // 모달에 결과물 띄우기
+    instaResultImg.src = canvas.toDataURL('image/png');
+    modal.classList.add('show');
+  });
+
+  document.getElementById('btnCloseModal').addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+
+  // 모달 바깥 클릭 시 닫기
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('show');
+  });
+
+</script>
 </body>
 </html>
