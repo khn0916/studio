@@ -27,7 +27,7 @@
     position: relative; 
     width: 100%; 
     max-width: 600px; 
-    aspect-ratio: 1 / 1; /* 기본 1:1 */
+    aspect-ratio: 1 / 1; 
     background: #fff; 
     border: 2px dashed #b0b0b0; 
     border-radius: 12px; 
@@ -37,7 +37,6 @@
   }
   .canvas-wrapper.drag-over { border-color: var(--accent); background: rgba(225,0,42,.05); }
   
-  /* 캔버스 상단 오버레이 바 */
   .canvas-top-bar {
     position: absolute; top: 10px; left: 10px; right: 10px;
     display: flex; justify-content: space-between; align-items: center;
@@ -252,13 +251,11 @@
     btnDeleteImg.style.display = 'none';
   };
 
-  // 2번: 9:16 비율 세로로 길게 조정 및 강제
   ratioSelect.onchange = (e) => {
     const val = e.target.value;
     wrap.style.aspectRatio = val;
-    // 9:16일 때 세로가 너무 길어지면 화면 밖으로 나갈 수 있으므로 max-width 조정
     if (val === '9/16') {
-      wrap.style.maxWidth = '340px'; // 세로형이므로 가로폭 줄임
+      wrap.style.maxWidth = '340px'; 
     } else if (val === '4/5') {
       wrap.style.maxWidth = '480px';
     } else {
@@ -363,7 +360,6 @@
     c.height = wrap.clientHeight;
     const ctx = c.getContext('2d');
 
-    // 배경 채우기 (사진이 없을 수도 있으니 흰색으로)
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, c.width, c.height);
 
@@ -383,13 +379,13 @@
     return c.toDataURL('image/png');
   }
 
-  /* ── 1번: 인스타 피드 전체 캡처 ── */
+  /* ── 1번: 인스타 피드 전체 캡처 (버튼 제외) ── */
   function captureInstaFeed(mainImageDataUrl) {
     return new Promise((resolve) => {
       const feedWidth = 400;
       const headerHeight = 60;
-      const imageSize = 400; // 피드 속 사진은 1:1 강제
-      const footerHeight = 110; // 캡션과 아이콘 영역
+      const imageSize = 400; 
+      const footerHeight = 110; 
       
       const c = document.createElement('canvas');
       c.width = feedWidth;
@@ -400,7 +396,7 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, c.width, c.height);
 
-      // 2. 헤더 그리기 (프로필 + 닉네임)
+      // 2. 헤더 그리기
       ctx.fillStyle = '#f0f0f0';
       ctx.beginPath();
       ctx.arc(35, 30, 18, 0, Math.PI * 2);
@@ -427,13 +423,12 @@
         const imgRatio = imgObj.width / imgObj.height;
         let sx, sy, sWidth, sHeight;
         
-        // 중앙 크롭 로직 (1:1)
-        if (imgRatio > 1) { // 가로가 더 길 때
+        if (imgRatio > 1) {
           sHeight = imgObj.height;
           sWidth = imgObj.height;
           sx = (imgObj.width - sWidth) / 2;
           sy = 0;
-        } else { // 세로가 더 길 때
+        } else {
           sWidth = imgObj.width;
           sHeight = imgObj.width;
           sx = 0;
@@ -445,13 +440,12 @@
         // 4. 하단 (아이콘 및 캡션)
         const footerY = headerHeight + imageSize;
         
-        // 아이콘 그리기 (이모지)
         ctx.font = '20px Arial';
+        ctx.fillStyle = '#000'; // 아이콘 색상 초기화
         ctx.fillText('❤️', 15, footerY + 25);
         ctx.fillText('💬', 50, footerY + 25);
         ctx.fillText('✈️', 85, footerY + 25);
 
-        // 캡션
         ctx.font = 'bold 13px "Pretendard", sans-serif';
         ctx.fillText('ALEPH_Studio', 15, footerY + 60);
         ctx.font = '13px "Pretendard", sans-serif';
@@ -461,15 +455,7 @@
         ctx.fillStyle = '#00376b';
         ctx.fillText('#SKTagram #CardStudio', 15, footerY + 85);
 
-        // 다운로드 버튼 모양 그리기 (시각적 재현)
-        ctx.fillStyle = '#00376b';
-        ctx.beginPath();
-        ctx.roundRect(feedWidth - 110, footerY + 45, 95, 35, 6);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('💾 다운로드', feedWidth - 62, footerY + 67);
+        // 버튼 그리는 코드 삭제됨 (깔끔한 피드 이미지)
 
         resolve(c.toDataURL('image/png'));
       };
@@ -502,7 +488,6 @@
 
   btnModalDownload.onclick = async () => {
     if (!resultImg.src) return;
-    // 피드 전체 캡처 함수 호출
     const feedDataUrl = await captureInstaFeed(resultImg.src);
     const a = document.createElement('a');
     a.href = feedDataUrl;
