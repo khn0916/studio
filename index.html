@@ -8,7 +8,6 @@
   :root { --bg-light: #f0f2f5; --panel-bg: #fff; --text-dark: #333; --border-color: #e0e0e0; --accent: #E1002A; }
   body { margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-light); color: var(--text-dark); font-family: 'Pretendard', sans-serif; }
 
-  /* 가운데 정렬이 필요한 곳 */
   .center-panel, .canvas-wrapper, .upload-label, .insta-profile, .insta-main, .modal-overlay.show { display: flex; justify-content: center; align-items: center; }
 
   /* 상단 바 */
@@ -28,8 +27,7 @@
     position: relative; 
     width: 100%; 
     max-width: 600px; 
-    /* 기본 비율 1:1 (JS로 제어) */
-    aspect-ratio: 1 / 1; 
+    aspect-ratio: 1 / 1; /* 기본 1:1 */
     background: #fff; 
     border: 2px dashed #b0b0b0; 
     border-radius: 12px; 
@@ -39,11 +37,11 @@
   }
   .canvas-wrapper.drag-over { border-color: var(--accent); background: rgba(225,0,42,.05); }
   
-  /* 1, 2번: 캔버스 상단 오버레이 바 */
+  /* 캔버스 상단 오버레이 바 */
   .canvas-top-bar {
     position: absolute; top: 10px; left: 10px; right: 10px;
     display: flex; justify-content: space-between; align-items: center;
-    z-index: 20; pointer-events: none; /* 버튼만 클릭되게 */
+    z-index: 20; pointer-events: none; 
   }
   .canvas-top-left, .canvas-top-right { display: flex; gap: 8px; pointer-events: auto; }
   
@@ -114,7 +112,6 @@
   .insta-actions { display: flex; gap: 15px; margin-bottom: 8px; font-size: 1.5rem; }
   .insta-caption { font-size: .9rem; line-height: 1.4; flex: 1; }
   .insta-caption span { color: #00376b; }
-  /* 4번: 피드 모달 다운로드 버튼 */
   .btn-insta-download { padding: 8px 12px; background: #00376b; color: white; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
   
   .close-modal { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; }
@@ -125,24 +122,18 @@
   <div class="top-bar">
     <h1>Card Studio</h1>
     <div class="top-actions">
-      <!-- 3번: 바로 다운로드 버튼 추가 -->
       <button class="btn-outline" id="btnDirectDownload">바로 다운로드💾</button>
-      <!-- 4번: 완성하기 -> 업로드하기로 이름 변경 -->
       <button class="btn-complete" id="btnComplete">업로드하기</button>
     </div>
   </div>
 
   <div class="main-container">
-    <!-- 중앙: 메인 캔버스 -->
     <div class="center-panel">
       <div class="canvas-wrapper" id="canvasWrapper">
         
-        <!-- 1, 2번: 캔버스 상단 컨트롤 바 -->
         <div class="canvas-top-bar">
           <div class="canvas-top-left">
-            <!-- 1번: 폴더 아이콘 -->
             <button class="icon-btn" id="btnUploadIcon" title="사진 가져오기">📁</button>
-            <!-- 1번: 비율 변경 셀렉트 -->
             <select class="ratio-select" id="ratioSelect">
               <option value="1/1">1:1</option>
               <option value="4/5">4:5</option>
@@ -150,7 +141,6 @@
             </select>
           </div>
           <div class="canvas-top-right">
-            <!-- 2번: 사진 삭제 버튼 -->
             <button class="icon-btn" id="btnDeleteImg" style="display: none;">❌ 사진삭제</button>
           </div>
         </div>
@@ -167,7 +157,6 @@
       </div>
     </div>
 
-    <!-- 오른쪽: 색상 + 도구 -->
     <div class="right-panel">
       <div class="color-section">
         <div class="title">색상 <span class="swatch" id="currentColor"></span></div>
@@ -215,7 +204,6 @@
       <div class="insta-main"><img id="instaResultImg" alt="완성된 짤"></div>
       <div class="insta-footer">
         <div class="insta-caption"><b>ALEPH_Studio</b> 우나 야하!<br><span>#SKTagram #CardStudio</span></div>
-        <!-- 4번: 모달 다운로드 버튼 -->
         <button class="btn-insta-download" id="btnModalDownload">💾 다운로드</button>
       </div>
       <div class="insta-actions" style="padding: 0 16px 12px;">❤️ 💬 ✈️</div>
@@ -241,24 +229,21 @@
   let drag = null, grab = null;                             
   let textX = 50, textY = 50;                               
 
-  /* ── 아코디언 / 준비 중 기능 ── */
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
-  /* ── 이미지 업로드 (클릭 / 드래그) ── */
+  /* ── 이미지 업로드 / 삭제 ── */
   function handleFile(file) {
     if (!['image/png', 'image/jpeg'].includes(file.type)) return alert('지원하지 않는 파일 형식입니다. PNG 또는 JPEG 파일만 사용 가능합니다.');
     if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
     img.src = URL.createObjectURL(file);
     img.style.display = 'block';
     label.style.display = 'none';
-    btnDeleteImg.style.display = 'flex'; // 2번: 이미지가 있으면 삭제 버튼 보임
+    btnDeleteImg.style.display = 'flex';
   }
   
-  // 1번: 폴더 아이콘 클릭 시 파일 탐색기
   btnUploadIcon.onclick = () => fileInput.click();
 
-  // 2번: 사진 삭제 로직
   btnDeleteImg.onclick = () => {
     if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
     img.src = '';
@@ -267,9 +252,18 @@
     btnDeleteImg.style.display = 'none';
   };
 
-  // 1번: 비율 변경 로직
+  // 2번: 9:16 비율 세로로 길게 조정 및 강제
   ratioSelect.onchange = (e) => {
-    wrap.style.aspectRatio = e.target.value;
+    const val = e.target.value;
+    wrap.style.aspectRatio = val;
+    // 9:16일 때 세로가 너무 길어지면 화면 밖으로 나갈 수 있으므로 max-width 조정
+    if (val === '9/16') {
+      wrap.style.maxWidth = '340px'; // 세로형이므로 가로폭 줄임
+    } else if (val === '4/5') {
+      wrap.style.maxWidth = '480px';
+    } else {
+      wrap.style.maxWidth = '600px';
+    }
   };
 
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(type => wrap.addEventListener(type, e => {
@@ -298,7 +292,6 @@
     return { h, l: (max + min) * 50 };
   }
 
-  /* ── 현재 색 적용 / 사용기록 ── */
   function applyColor(c) {
     color = c;
     curColor.style.background = text.style.color = c;
@@ -317,7 +310,6 @@
     }));
   }
 
-  /* ── 컬러 휠 (바깥 도넛: 색상) / 밝기 막대 (명도) ── */
   function pick(e) {
     const r = wheel.getBoundingClientRect();
     const x = e.clientX - r.left - r.width / 2, y = r.top + r.height / 2 - e.clientY;
@@ -348,7 +340,6 @@
     grab = { x: e.clientX - (r.left + textX / 100 * r.width), y: e.clientY - (r.top + textY / 100 * r.height) };
   });
 
-  /* ── 마우스 이동 / 놓기 (휠·텍스트 공용) ── */
   window.addEventListener('mousemove', e => {
     if (drag === 'text') {
       const r = wrap.getBoundingClientRect();
@@ -364,16 +355,17 @@
     text.classList.remove('active');
   });
 
-  /* ── 캡처 유틸리티 함수 ── */
-  function captureImage() {
-    if (!img.naturalWidth) {
-      alert('먼저 이미지를 불러와주세요!');
-      return null;
-    }
+  /* ── 1번: 메인 캔버스 캡처 (사진만) ── */
+  function captureMainImage() {
+    if (!img.naturalWidth) return null;
     const c = document.createElement('canvas');
     c.width = wrap.clientWidth;
     c.height = wrap.clientHeight;
     const ctx = c.getContext('2d');
+
+    // 배경 채우기 (사진이 없을 수도 있으니 흰색으로)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, c.width, c.height);
 
     const s = Math.min(c.width / img.naturalWidth, c.height / img.naturalHeight);           
     const w = img.naturalWidth * s, h = img.naturalHeight * s;
@@ -391,31 +383,129 @@
     return c.toDataURL('image/png');
   }
 
-  /* ── 3번: 바로 다운로드 ── */
+  /* ── 1번: 인스타 피드 전체 캡처 ── */
+  function captureInstaFeed(mainImageDataUrl) {
+    return new Promise((resolve) => {
+      const feedWidth = 400;
+      const headerHeight = 60;
+      const imageSize = 400; // 피드 속 사진은 1:1 강제
+      const footerHeight = 110; // 캡션과 아이콘 영역
+      
+      const c = document.createElement('canvas');
+      c.width = feedWidth;
+      c.height = headerHeight + imageSize + footerHeight;
+      const ctx = c.getContext('2d');
+
+      // 1. 전체 배경 하얗게
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      // 2. 헤더 그리기 (프로필 + 닉네임)
+      ctx.fillStyle = '#f0f0f0';
+      ctx.beginPath();
+      ctx.arc(35, 30, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = '16px Arial';
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🦋', 27, 31);
+      ctx.font = 'bold 14px "Pretendard", sans-serif';
+      ctx.fillText('ALEPH_Studio', 65, 31);
+      
+      // 헤더 밑줄
+      ctx.strokeStyle = '#eee';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, headerHeight);
+      ctx.lineTo(feedWidth, headerHeight);
+      ctx.stroke();
+
+      // 3. 사진 그리기 (1:1 강제 크롭)
+      const imgObj = new Image();
+      imgObj.onload = () => {
+        const imgRatio = imgObj.width / imgObj.height;
+        let sx, sy, sWidth, sHeight;
+        
+        // 중앙 크롭 로직 (1:1)
+        if (imgRatio > 1) { // 가로가 더 길 때
+          sHeight = imgObj.height;
+          sWidth = imgObj.height;
+          sx = (imgObj.width - sWidth) / 2;
+          sy = 0;
+        } else { // 세로가 더 길 때
+          sWidth = imgObj.width;
+          sHeight = imgObj.width;
+          sx = 0;
+          sy = (imgObj.height - sHeight) / 2;
+        }
+        
+        ctx.drawImage(imgObj, sx, sy, sWidth, sHeight, 0, headerHeight, imageSize, imageSize);
+
+        // 4. 하단 (아이콘 및 캡션)
+        const footerY = headerHeight + imageSize;
+        
+        // 아이콘 그리기 (이모지)
+        ctx.font = '20px Arial';
+        ctx.fillText('❤️', 15, footerY + 25);
+        ctx.fillText('💬', 50, footerY + 25);
+        ctx.fillText('✈️', 85, footerY + 25);
+
+        // 캡션
+        ctx.font = 'bold 13px "Pretendard", sans-serif';
+        ctx.fillText('ALEPH_Studio', 15, footerY + 60);
+        ctx.font = '13px "Pretendard", sans-serif';
+        ctx.fillStyle = '#333';
+        ctx.fillText('우나 야하!', 105, footerY + 60);
+        
+        ctx.fillStyle = '#00376b';
+        ctx.fillText('#SKTagram #CardStudio', 15, footerY + 85);
+
+        // 다운로드 버튼 모양 그리기 (시각적 재현)
+        ctx.fillStyle = '#00376b';
+        ctx.beginPath();
+        ctx.roundRect(feedWidth - 110, footerY + 45, 95, 35, 6);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('💾 다운로드', feedWidth - 62, footerY + 67);
+
+        resolve(c.toDataURL('image/png'));
+      };
+      imgObj.src = mainImageDataUrl;
+    });
+  }
+
+  /* ── 버튼 이벤트 ── */
   btnDirectDownload.onclick = () => {
-    const dataUrl = captureImage();
+    const dataUrl = captureMainImage();
     if (dataUrl) {
       const a = document.createElement('a');
       a.href = dataUrl;
       a.download = 'card_studio_image.png';
       a.click();
+    } else {
+      alert('먼저 이미지를 불러와주세요!');
     }
   };
 
-  /* ── 4번: 업로드하기 (모달 열기) ── */
   $('btnComplete').onclick = () => {
-    const dataUrl = captureImage();
+    const dataUrl = captureMainImage();
     if (dataUrl) {
       resultImg.src = dataUrl;
       modal.classList.add('show');
+    } else {
+      alert('먼저 이미지를 불러와주세요!');
     }
   };
 
-  /* ── 4번: 모달 다운로드 ── */
-  btnModalDownload.onclick = () => {
+  btnModalDownload.onclick = async () => {
     if (!resultImg.src) return;
+    // 피드 전체 캡처 함수 호출
+    const feedDataUrl = await captureInstaFeed(resultImg.src);
     const a = document.createElement('a');
-    a.href = resultImg.src;
+    a.href = feedDataUrl;
     a.download = 'card_studio_instagram.png';
     a.click();
   };
