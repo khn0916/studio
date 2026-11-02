@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>짤·카드 스튜디오</title>
+<style>
+  :root {
+    --bg-color: #f4f4f6;
+    --card-bg: #ffffff;
+    --text-color: #333;
+    --border-color: #ddd;
+    --accent-color: #E1002A; /* SKT Red */
+  }
+  body {
+    margin: 0;
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Pretendard', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  .container {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  /* ── 왼쪽: 편집 도구 (Control Panel) ── */
+  .control-panel {
+    flex: 1;
+    min-width: 320px;
+    max-width: 500px;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .control-panel h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.5rem;
+    color: #111;
+  }
+  
+  .section-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+  }
+
+  /* 파일 업로드 */
+  .file-upload {
+    border: 2px dashed var(--border-color);
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .file-upload:hover { border-color: var(--accent-color); }
+  .file-upload input { display: none; }
+  .file-name {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .error-msg {
+    color: red;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: none;
+  }
+
+  /* 텍스트 편집 */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .form-group label { font-size: 0.95rem; font-weight: bold; }
+  input[type="text"], input[type="range"], input[type="color"] {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: inherit;
+  }
+  input[type="color"] { padding: 2px; cursor: pointer; height: 40px; }
+  
+  .row { display: flex; gap: 15px; align-items: center; }
+  .row input[type="range"] { flex: 1; }
+
+  /* ── 오른쪽: 미리보기 (Preview) ── */
+  .preview-panel {
+    flex: 1;
+    min-width: 320px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #555;
+  }
+
+  /* 인스타 피드 모양 */
+  .instagram-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .insta-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+  }
+  .insta-profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    overflow: hidden;
+  }
+  .insta-profile-img img { width: 100%; height: 100%; object-fit: cover; }
+  .insta-nickname { font-weight: bold; font-size: 0.95rem; }
+  .insta-more { margin-left: auto; font-weight: bold; cursor: pointer; }
+
+  .insta-main-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  /* 이미지가 없을 때 표시되는 안내 */
+  .placeholder-text {
+    color: #aaa;
+    font-size: 1rem;
+    text-align: center;
+    padding: 20px;
+  }
+  /* 실제 이미지 */
+  #previewImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  /* 이미지 위에 얹히는 텍스트 */
+  #overlayText {
+    position: absolute;
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    white-space: nowrap;
+    pointer-events: none; /* 드래그 방지 */
+    text-align: center;
+    transform: translate(-50%, -50%); /* 중앙 정렬 */
+    display: none;
+  }
+
+  .insta-actions {
+    padding: 12px 16px;
+    display: flex;
+    gap: 15px;
+    font-size: 1.5rem;
+  }
+  .insta-actions span { cursor: pointer; }
+  .insta-caption {
+    padding: 0 16px 16px 16px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .insta-caption b { color: #111; }
+  .tag { color: #00376b; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- 왼쪽: 편집 도구 -->
+  <div class="control-panel">
+    <h2>Card Studio</h2>
+    
+    <div>
+      <div class="section-title">1. 배경 이미지</div>
+      <label class="file-upload" for="imageInput">
+        <div>📂 클릭해서 이미지 불러오기</div>
+        <div style="font-size:0.8rem; color:#888; margin-top:5px;">PNG, JPEG 파일만 지원</div>
+        <input type="file" id="imageInput" accept="image/png, image/jpeg">
+      </label>
+      <div class="file-name" id="fileName">선택된 파일 없음</div>
+      <div class="error-msg" id="errorMsg">지원하지 않는 파일입니다. PNG 또는 JPEG를 선택해주세요.</div>
+    </div>
+
+    <div>
+      <div class="section-title">2. 문구 편집</div>
+      <div class="form-group">
+        <label for="textInput">문구 입력</label>
+        <input type="text" id="textInput" placeholder="여기에 문구를 입력하세요" maxlength="30">
+      </div>
+      
+      <div class="form-group" style="margin-top: 15px;">
+        <label>크기 조절</label>
+        <div class="row">
+          <input type="range" id="sizeInput" min="10" max="100" value="40">
+          <span id="sizeValue" style="width: 40px; text-align: right;">40px</span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label>색상 선택</label>
+        <input type="color" id="colorInput" value="#ffffff">
+      </div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 인스타그램 미리보기 -->
+  <div class="preview-panel">
+    <div class="preview-title">실시간 미리보기</div>
+    
+    <div class="instagram-card">
+      <!-- 헤더 -->
+      <div class="insta-header">
+        <div class="insta-profile-img">😈</div>
+        <div class="insta-nickname">ALEPH_Studio</div>
+        <div class="insta-more">···</div>
+      </div>
+      
+      <!-- 메인 이미지 영역 -->
+      <div class="insta-main-image" id="imageContainer">
+        <div class="placeholder-text">이미지를 불러오면<br>여기에 표시됩니다.</div>
+        <img id="previewImg" src="" alt="미리보기 이미지">
+        
+        <!-- 이미지 위 텍스트 -->
+        <div id="overlayText">텍스트</div>
+      </div>
+      
+      <!-- 하단 액션 및 캡션 -->
+      <div class="insta-actions">
+        <span>❤️</span><span>💬</span><span>✈️</span>
+      </div>
+      <div class="insta-caption">
+        <b>ALEPH_Studio</b> 오늘도 즐거운 코딩!<br>
+        <span class="tag">#ALEPH_Studio</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const fileName = document.getElementById('fileName');
+  const errorMsg = document.getElementById('errorMsg');
+  
+  const previewImg = document.getElementById('previewImg');
+  const placeholderText = document.querySelector('.placeholder-text');
+  const overlayText = document.getElementById('overlayText');
+  
+  const textInput = document.getElementById('textInput');
+  const sizeInput = document.getElementById('sizeInput');
+  const sizeValue = document.getElementById('sizeValue');
+  const colorInput = document.getElementById('colorInput');
+
+  // 텍스트 초기 위치 (중앙)
+  let textPos = { x: 50, y: 50 }; // 퍼센트(%)
+
+  // ── 파일 업로드 처리 ──
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    
+    // 파일이 선택되지 않았으면 리턴
+    if (!file) return;
+
+    // T03-C09, T03-C10: 지원하지 않는 파일 거부 및 이유 표시
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+      errorMsg.style.display = 'block';
+      fileName.textContent = '지원하지 않는 파일 형식';
+      // 기존 작업 유지를 위해 return (이미지 변경 안 함)
+      imageInput.value = ''; // input 초기화
+      return;
+    }
+
+    // 정상 파일이면 에러 메시지 숨김
+    errorMsg.style.display = 'none';
+    fileName.textContent = file.name;
+
+    // FileReader로 이미지 읽기
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewImg.src = event.target.result;
+      previewImg.style.display = 'block';
+      placeholderText.style.display = 'none';
+      
+      // 텍스트가 입력되어 있으면 보이게 함
+      if (textInput.value.trim() !== '') {
+        overlayText.style.display = 'block';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── 텍스트 입력 처리 (T03-C06: 즉시 반영) ──
+  textInput.addEventListener('input', (e) => {
+    const text = e.target.value;
+    overlayText.textContent = text;
+    
+    if (text.trim() === '') {
+      overlayText.style.display = 'none';
+    } else {
+      overlayText.style.display = 'block';
+    }
+    updateTextStyle();
+  });
+
+  // ── 텍스트 크기 변경 (T03-C07: 즉시 반영) ──
+  sizeInput.addEventListener('input', (e) => {
+    const size = e.target.value;
+    sizeValue.textContent = size + 'px';
+    overlayText.style.fontSize = size + 'px';
+  });
+
+  // ── 텍스트 색상 변경 (T03-C08: 즉시 반영) ──
+  colorInput.addEventListener('input', (e) => {
+    overlayText.style.color = e.target.value;
+  });
+
+  // ── 텍스트 위치 업데이트 ──
+  function updateTextStyle() {
+    overlayText.style.left = textPos.x + '%';
+    overlayText.style.top = textPos.y + '%';
+  }
+
+  // 마우스 드래그로 텍스트 위치 이동 (스케치의 '위치 변경' 구현)
+  let isDragging = false;
+  let startX, startY;
+  const imageContainer = document.getElementById('imageContainer');
+
+  imageContainer.addEventListener('mousedown', (e) => {
+    // 텍스트가 없으면 드래그 불가
+    if (textInput.value.trim() === '' || previewImg.style.display === 'none') return;
+    
+    // 클릭한 위치가 텍스트 근처인지 확인 (간단하게 컨테이너 내부 어디든 드래그 허용)
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    // 움직인 거리 계산 (픽셀 -> 퍼센트)
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    
+    const rect = imageContainer.getBoundingClientRect();
+    
+    // 위치 업데이트 (0~100% 사이로 제한)
+    textPos.x = Math.max(0, Math.min(100, textPos.x + (dx / rect.width) * 100));
+    textPos.y = Math.max(0, Math.min(100, textPos.y + (dy / rect.height) * 100));
+    
+    updateTextStyle();
+    
+    // 시작점 갱신
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  // 초기 위치 설정
+  updateTextStyle();
+</script>
+
+</body>
+</html>
