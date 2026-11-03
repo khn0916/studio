@@ -540,5 +540,148 @@
 
   /* ── 캡처 및 다운로드 ── */
   function captureMainImage() {
-    if (!baseImage) return null
+    if (!baseImage) return null;
     
+    // 메인 캔버스 복사
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tCtx = tempCanvas.getContext('2d');
+    tCtx.drawImage(canvas, 0, 0);
+
+    // 텍스트가 있으면 그리기
+    if (text.style.display === 'block') {
+      const cs = getComputedStyle(text);
+      // 텍스트 위치를 캔버스 비율에 맞게 계산
+      const tX = (textX / 100) * tempCanvas.width;
+      const tY = (textY / 100) * tempCanvas.height;
+      // 폰트 사이즈도 캔버스 비율에 맞게 스케일링
+      const scale = tempCanvas.width / wrap.clientWidth;
+      const fontSize = parseInt(cs.fontSize) * scale;
+      
+      Object.assign(tCtx, {
+        font: `bold ${fontSize}px 'Pretendard', sans-serif`, fillStyle: cs.color,
+        textAlign: 'center', textBaseline: 'middle',
+        shadowColor: 'rgba(0,0,0,0.8)', shadowBlur: 4, shadowOffsetX: 2, shadowOffsetY: 2,
+      });
+      tCtx.fillText(text.textContent, tX, tY);
+    }
+    return tempCanvas.toDataURL('image/png');
+  }
+
+  function captureInstaFeed(mainImageDataUrl) {
+    return new Promise((resolve) => {
+      const feedWidth = 400;
+      const headerHeight = 60;
+      const imageSize = 400; 
+      const footerHeight = 110; 
+      
+      const c = document.createElement('canvas');
+      c.width = feedWidth;
+      c.height = headerHeight + imageSize + footerHeight;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.fillStyle = '#f0f0f0';
+      ctx.beginPath();
+      ctx.arc(35, 30, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = '16px Arial';
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🦋', 27, 31);
+      ctx.font = 'bold 14px "Pretendard", sans-serif';
+      ctx.fillText('ALEPH_Studio', 65, 31);
+      
+      ctx.strokeStyle = '#eee';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, headerHeight);
+      ctx.lineTo(feedWidth, headerHeight);
+      ctx.stroke();
+
+      const imgObj = new Image();
+      imgObj.onload = () => {
+        const imgRatio = imgObj.width / imgObj.height;
+        let sx, sy, sWidth, sHeight;
+        
+        if (imgRatio > 1) {
+          sHeight = imgObj.height;
+          sWidth = imgObj.height;
+          sx = (imgObj.width - sWidth) / 2;
+          sy = 0;
+        } else {
+          sWidth = imgObj.width;
+          sHeight = imgObj.width;
+          sx = 0;
+          sy = (imgObj.height - sHeight) / 2;
+        }
+        
+        ctx.drawImage(imgObj, sx, sy, sWidth, sHeight, 0, headerHeight, imageSize, imageSize);
+
+        const footerY = headerHeight + imageSize;
+        
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#000'; 
+        ctx.fillText('❤️', 15, footerY + 25);
+        ctx.fillText('💬', 50, footerY + 25);
+        ctx.fillText('✈️', 85, footerY + 25);
+
+        ctx.font = 'bold 13px "Pretendard", sans-serif';
+        ctx.fillText('ALEPH_Studio', 15, footerY + 60);
+        ctx.font = '13px "Pretendard", sans-serif';
+        ctx.fillStyle = '#333';
+        ctx.fillText('제가 만들었어요!', 105, footerY + 60);
+        
+        ctx.fillStyle = '#00376b';
+        ctx.fillText('#SKTagram #CardStudio', 15, footerY + 85);
+
+        resolve(c.toDataURL('image/png'));
+      };
+      imgObj.src = mainImageDataUrl;
+    });
+  }
+
+  btnDirectDownload.onclick = () => {
+    const dataUrl = captureMainImage();
+    if (dataUrl) {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'card_studio_image.png';
+      a.click();
+    } else {
+      alert('먼저 이미지를 불러와주세요!');
+    }
+  };
+
+  $('btnComplete').onclick = () => {
+    const dataUrl = captureMainImage();
+    if (dataUrl) {
+      resultImg.src = dataUrl;
+      modal.classList.add('show');
+    } else {
+      alert('먼저 이미지를 불러와주세요!');
+    }
+  };
+
+  btnModalDownload.onclick = async () => {
+    if (!resultImg.src) return;
+    const feedDataUrl = await captureInstaFeed(resultImg.src);
+    const a = document.createElement('a');
+    a.href = feedDataUrl;
+    a.download = 'card_studio_instagram.png';
+    a.click();
+  };
+
+  $('btnCloseModal').onclick = () => modal.classList.remove('show');
+  modal.onclick = e => { if (e.target === modal) modal.classList.remove('show'); };
+
+  remember('#FFFFFF');                                        
+  renderTrack();
+  updateColor();                                              
+</script>
+</body>
+</html>
