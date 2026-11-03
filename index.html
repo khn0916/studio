@@ -202,8 +202,8 @@
       
       <!-- 캔버스 바깥 하단 툴바 (뒤로/앞으로) -->
       <div class="canvas-bottom-bar">
-        <button class="history-btn" id="btnUndo" disabled>⏪ 뒤로</button>
-        <button class="history-btn" id="btnRedo" disabled>⏩ 앞으로</button>
+        <button class="history-btn" id="btnUndo" title="실행 취소" aria-label="실행 취소" disabled>⏪</button>
+        <button class="history-btn" id="btnRedo" title="다시 실행" aria-label="다시 실행" disabled>⏩</button>
       </div>
 
     </div>
@@ -343,26 +343,92 @@
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
   /* ── 캔버스 초기화 및 히스토리 ── */
-  function initCanvas() {
-    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-    if (baseImage) {
-      const s = Math.min(bgCanvas.width / baseImage.width, bgCanvas.height / baseImage.height);           
-      const w = baseImage.width * s, h = baseImage.height * s;
-      bgCtx.drawImage(baseImage, (bgCanvas.width - w) / 2, (bgCanvas.height - h) / 2, w, h);
-    }
-    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height); // 그림 레이어도 초기화
-    saveHistory();
+  let historyRestoreToken = 0;
+  let drawingReference = null;
+
+  function cloneCanvas(sourceCanvas) {
+    const copy = document.createElement('canvas');
+    copy.width = sourceCanvas.width;
+    copy.height = sourceCanvas.height;
+    copy.getContext('2d').drawImage(sourceCanvas, 0, 0);
+    return copy;
   }
 
-  function saveHistory() {
+  function setRatioStyles(value) {
+    wrap.style.aspectRatio = value;
+    if (value === '9/16') wrap.style.maxWidth = '340px';
+    else if (value === '4/5') wrap.style.maxWidth = '480px';
+    else wrap.style.maxWidth = '600px';
+  }
+
+  function getCanvasDimensions(value) {
+    // .canvas-wrapper에는 너비 전환 애니메이션이 있으므로 현재 너비(clientWidth)가
+    // 아니라 목표 비율의 최대 너비와 부모의 실제 사용 가능 너비로 계산합니다.
+    const maxWidth = value === '9/16' ? 340 : value === '4/5' ? 480 : 600;
+    const availableWidth = wrap.parentElement.clientWidth;
+    const width = Math.max(1, Math.round(Math.min(maxWidth, availableWidth)));
+    const parts = value.split('/').map(Number);
+    const height = Math.max(1, Math.round(width * parts[1] / parts[0]));
+    return { width, height };
+  }
+
+  function resizeCanvases(width, height) {
+    bgCanvas.width = drawCanvas.width = width;
+    bgCanvas.height = drawCanvas.height = height;
+  }
+
+  function renderBackground() {
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+    if (!baseImage) return;
+
+    const scale = Math.min(bgCanvas.width / baseImage.width, bgCanvas.height / baseImage.height);
+    const width = baseImage.width * scale;
+    const height = baseImage.height * scale;
+    bgCtx.drawImage(baseImage, (bgCanvas.width - width) / 2, (bgCanvas.height - height) / 2, width, height);
+  }
+
+  function drawContained(sourceCanvas) {
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    if (!sourceCanvas || !sourceCanvas.width || !sourceCanvas.height) return;
+
+    // 비율이 달라져도 펜 자국이 찌그러지지 않도록 원본 비율을 유지해 배치합니다.
+    const scale = Math.min(drawCanvas.width / sourceCanvas.width, drawCanvas.height / sourceCanvas.height);
+    const width = sourceCanvas.width * scale;
+    const height = sourceCanvas.height * scale;
+    ctx.drawImage(sourceCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height,
+      (drawCanvas.width - width) / 2, (drawCanvas.height - height) / 2, width, height);
+  }
+
+  function captureEditorState() {
+    return {
+      drawData: drawCanvas.toDataURL('image/png'),
+      width: drawCanvas.width,
+      height: drawCanvas.height,
+      ratio: ratioSelect.value,
+      text: {
+        content: text.textContent,
+        display: text.style.display,
+        fontSize: text.style.fontSize,
+        color: text.style.color,
+        left: textX,
+        top: textY,
+        sizeValue: sizeInput.value
+      }
+    };
+  }
+
+  function saveHistory(updateDrawingReference = false) {
     if (historyStep < canvasHistory.length - 1) {
       canvasHistory = canvasHistory.slice(0, historyStep + 1);
     }
-    canvasHistory.push(drawCanvas.toDataURL());
-    if (canvasHistory.length > MAX_HISTORY) {
-      canvasHistory.shift();
-    } else {
-      historyStep++;
+
+    const state = captureEditorState();
+    canvasHistory.push(state);
+    if (canvasHistory.length > MAX_HISTORY) canvasHistory.shift();
+    historyStep = canvasHistory.length - 1;
+
+    if (updateDrawingReference || !drawingReference) {
+      drawingReference = cloneCanvas(drawCanvas);
     }
     updateHistoryButtons();
   }
@@ -372,13 +438,56 @@
     btnRedo.disabled = historyStep >= canvasHistory.length - 1;
   }
 
-  function restoreCanvas(dataUrl) {
+  function applyTextState(textState) {
+    if (!textState) return;
+    text.textContent = textState.content;
+    text.style.display = textState.display || 'none';
+    text.style.fontSize = textState.fontSize || '';
+    text.style.color = textState.color || color;
+    textX = Number.isFinite(textState.left) ? textState.left : 50;
+    textY = Number.isFinite(textState.top) ? textState.top : 50;
+    text.style.left = textX + '%';
+    text.style.top = textY + '%';
+    if (textState.sizeValue !== undefined) sizeInput.value = textState.sizeValue;
+    textInput.value = textState.content;
+  }
+
+  function restoreCanvas(state) {
+    if (!state) return;
+    const token = ++historyRestoreToken;
+
+    ratioSelect.value = state.ratio || '1/1';
+    setRatioStyles(ratioSelect.value);
+    resizeCanvases(state.width, state.height);
+    renderBackground();
+    applyTextState(state.text);
+
     const img = new Image();
     img.onload = () => {
+      // 빠른 실행 취소/다시 실행 중 오래된 이미지가 최신 상태를 덮지 않게 합니다.
+      if (token !== historyRestoreToken) return;
       ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, drawCanvas.width, drawCanvas.height);
+      drawingReference = cloneCanvas(drawCanvas);
     };
-    img.src = dataUrl;
+    img.onerror = () => {
+      if (token !== historyRestoreToken) return;
+      ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+      drawingReference = cloneCanvas(drawCanvas);
+    };
+    img.src = state.drawData;
+  }
+
+  function initCanvas() {
+    historyRestoreToken++;
+    renderBackground();
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+    // 새 이미지 업로드·삭제는 새 작업으로 취급해 이전 기록을 분리합니다.
+    canvasHistory = [];
+    historyStep = -1;
+    drawingReference = null;
+    saveHistory(true);
   }
 
   btnUndo.onclick = () => {
@@ -399,18 +508,40 @@
 
   /* ── 이미지 업로드 / 삭제 ── */
   function handleFile(file) {
-    if (!['image/png', 'image/jpeg'].includes(file.type)) return alert('지원하지 않는 파일 형식입니다. PNG 또는 JPEG 파일만 사용 가능합니다.');
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      alert('지원하지 않는 파일 형식입니다. PNG 또는 JPEG 파일만 사용 가능합니다.');
+      fileInput.value = '';
+      return;
+    }
+
     const reader = new FileReader();
+
     reader.onload = (e) => {
       const img = new Image();
+
       img.onload = () => {
         baseImage = img;
         initCanvas();
         label.style.display = 'none';
         btnDeleteImg.style.display = 'flex';
+        fileInput.value = '';
       };
+
+      img.onerror = () => {
+        alert('이미지를 불러오지 못했습니다. 다른 이미지 파일을 선택해주세요.');
+        fileInput.value = '';
+      };
+
       img.src = e.target.result;
     };
+
+    reader.onerror = () => {
+      alert('파일을 읽는 중 오류가 발생했습니다. 다시 시도해주세요.');
+      fileInput.value = '';
+    };
+
     reader.readAsDataURL(file);
   }
   
@@ -424,16 +555,26 @@
 
   ratioSelect.onchange = (e) => {
     const val = e.target.value;
-    wrap.style.aspectRatio = val;
-    if (val === '9/16') wrap.style.maxWidth = '340px'; 
-    else if (val === '4/5') wrap.style.maxWidth = '480px';
-    else wrap.style.maxWidth = '600px';
-    
-    const w = wrap.clientWidth;
-    bgCanvas.width = drawCanvas.width = w;
-    const h = w * (parseFloat(val.split('/')[1]) / parseFloat(val.split('/')[0]));
-    bgCanvas.height = drawCanvas.height = h;
-    initCanvas();
+    const sourceDrawing = drawingReference || cloneCanvas(drawCanvas);
+
+    // 캔버스 크기를 바꾸기 전에 펜 레이어 원본을 확보합니다.
+    const previousWidth = drawCanvas.width;
+    setRatioStyles(val);
+    const { width, height } = getCanvasDimensions(val);
+    historyRestoreToken++;
+    resizeCanvases(width, height);
+    renderBackground();
+    drawContained(sourceDrawing);
+
+    // 텍스트는 별도 레이어이므로 내용·위치·색상은 유지하고 화면 너비에 맞춰 크기만 조정합니다.
+    if (text.style.display === 'block') {
+      text.style.fontSize = (Number(sizeInput.value) * (width / 600)) + 'px';
+    }
+    text.style.left = textX + '%';
+    text.style.top = textY + '%';
+
+    // 비율 변경 자체도 실행 취소/다시 실행 기록에 포함합니다.
+    saveHistory(false);
   };
 
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(type => wrap.addEventListener(type, e => {
@@ -485,6 +626,7 @@
     const x = e.clientX - r.left - r.width / 2, y = r.top + r.height / 2 - e.clientY;
     const dist = Math.hypot(x, y);
     if (dist <= 35 || dist > r.width / 2) return false;                                  
+    // CSS 색상환의 각도와 HSL 색상값을 그대로 대응시킵니다.
     hue = (90 - Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
     renderTrack();
     updateColor();
@@ -495,12 +637,22 @@
   lightInput.onchange = () => remember(color);              
 
   /* ── 텍스트 ── */
+  function updateTextSize() {
+    text.style.fontSize = (Number(sizeInput.value) * (wrap.clientWidth / 600)) + 'px';
+  }
+
   $('btnAddText').onclick = () => {
     text.textContent = textInput.value || '텍스트를 입력하세요';
-    Object.assign(text.style, { fontSize: sizeInput.value + 'px', color, display: 'block' });
+    Object.assign(text.style, { color, display: 'block' });
+    updateTextSize();
+    text.style.left = textX + '%';
+    text.style.top = textY + '%';
+    saveHistory(false);
   };
-  sizeInput.oninput = () => text.style.fontSize = sizeInput.value + 'px';
+  sizeInput.oninput = updateTextSize;
+  sizeInput.onchange = () => saveHistory(false);
   textInput.oninput = () => text.textContent = textInput.value;
+  textInput.onchange = () => saveHistory(false);
 
   text.addEventListener('mousedown', e => {
     if (isDrawingMode || isEraserMode) return;
@@ -578,10 +730,10 @@
     lastX = pos.x; lastY = pos.y;
   });
 
-  window.addEventListener('mouseup', () => { 
+  window.addEventListener('mouseup', () => {
     if (isDrawing) {
-      isDrawing = false; 
-      saveHistory(); 
+      isDrawing = false;
+      saveHistory(true);
     }
   });
 
@@ -703,9 +855,11 @@
   });
 
   window.addEventListener('mouseup', () => {
-    if (drag === 'hue') remember(color);                       
+    if (drag === 'hue') remember(color);
+    const textWasDragged = drag === 'text';
     drag = null;
     text.classList.remove('active');
+    if (textWasDragged) saveHistory(false);
   });
 
   function captureMainImage() {
