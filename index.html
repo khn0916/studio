@@ -21,7 +21,7 @@
 
   /* 메인 캔버스 */
   .main-container { display: flex; flex: 1; overflow: hidden; }
-  .center-panel { flex: 1; padding: 30px; background: #e9ecef; position: relative; }
+  .center-panel { flex: 1; padding: 30px; background: #e9ecef; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   
   .canvas-wrapper { 
     position: relative; 
@@ -56,25 +56,28 @@
     padding: 6px; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: #333;
   }
 
-  /* 편의 기능: 뒤로/앞으로 가기 */
+  /* 편의 기능: 뒤로/앞으로 가기 (캔버스 바깥 아래로 이동) */
   .canvas-bottom-bar {
-    position: absolute; bottom: 10px; left: 10px;
-    display: flex; gap: 8px; z-index: 20; pointer-events: auto;
+    display: flex; gap: 8px; margin-top: 15px; z-index: 20; pointer-events: auto;
   }
   .history-btn {
-    background: rgba(255,255,255,0.9); border: 2px solid var(--accent); border-radius: 6px;
-    padding: 6px 12px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: #fff; border: 2px solid var(--accent); border-radius: 6px;
+    padding: 6px 15px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: var(--accent);
+    transition: 0.2s;
   }
-  .history-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
-  .history-btn:hover:not(:disabled) { background: #fff; }
+  .history-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; box-shadow: none; }
+  .history-btn:hover:not(:disabled) { background: #fff0f2; transform: translateY(-2px); }
 
   .upload-label { position: absolute; inset: 0; cursor: pointer; z-index: 5; }
   .upload-guide { text-align: center; color: #999; pointer-events: none; }
   .upload-guide svg { width: 50px; height: 50px; margin-bottom: 10px; fill: #ccc; }
   
-  #mainCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; cursor: default; }
-  .canvas-wrapper.drawing #mainCanvas { cursor: crosshair; }
+  /* 캔버스 레이어 */
+  #bgCanvas, #drawCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #bgCanvas { z-index: 1; }
+  #drawCanvas { z-index: 2; cursor: default; }
+  .canvas-wrapper.drawing #drawCanvas { cursor: crosshair; }
   
   .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; pointer-events: auto; }
   .text-layer.active { outline: 2px dashed #333; }
@@ -112,7 +115,6 @@
   .brush-item { padding: 8px; font-size: 0.8rem; text-align: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
   .brush-item.active { background: #333; color: #fff; border-color: #333; }
 
-  /* 브러시 두께 조절 */
   .brush-size-control { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 0.85rem; color: #555; }
   .brush-size-control input { flex: 1; }
 
@@ -179,14 +181,16 @@
         </label>
         <input type="file" id="fileInput" accept="image/png, image/jpeg" hidden>
         
-        <canvas id="mainCanvas" width="600" height="600"></canvas>
+        <canvas id="bgCanvas" width="600" height="600"></canvas>
+        <canvas id="drawCanvas" width="600" height="600"></canvas>
         <div class="text-layer" id="textLayer">텍스트를 입력하세요</div>
         
-        <!-- 편의 기능: 뒤로/앞으로 가기 -->
-        <div class="canvas-bottom-bar">
-          <button class="history-btn" id="btnUndo" disabled>⏪</button>
-          <button class="history-btn" id="btnRedo" disabled>⏩</button>
-        </div>
+      </div> <!-- canvas-wrapper 끝 -->
+      
+      <!-- 편의 기능: 뒤로/앞으로 가기 (캔버스 밖으로 이동) -->
+      <div class="canvas-bottom-bar">
+        <button class="history-btn" id="btnUndo" disabled>⏪</button>
+        <button class="history-btn" id="btnRedo" disabled>⏩</button>
       </div>
     </div>
 
@@ -212,14 +216,24 @@
             <div class="brush-item" data-brush="neon">네온사인</div>
             <div class="brush-item" data-brush="heart">하트</div>
             <div class="brush-item" data-brush="star">별</div>
-            <div class="brush-item" data-brush="eraser">지우개</div>
           </div>
 
-          <!-- 1번: 두께 조절 바 추가 -->
           <div class="brush-size-control">
             <span>두께</span>
             <input type="range" id="brushSizeInput" min="1" max="30" value="4">
             <span id="brushSizeValue">4</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion" id="accEraser">
+        <div class="accordion-header"><span>🧽 지우개</span><span class="arrow">▼</span></div>
+        <div class="accordion-content">
+          <button class="tool-btn" id="btnEraserMode">🧽 지우개 모드 켜기/끄기</button>
+          <div class="brush-size-control" style="margin-top:10px;">
+            <span>지우개 두께</span>
+            <input type="range" id="eraserSizeInput" min="5" max="50" value="20">
+            <span id="eraserSizeValue">20</span>
           </div>
         </div>
       </div>
@@ -265,8 +279,11 @@
 <script>
   const $ = id => document.getElementById(id);
   const wrap = $('canvasWrapper');
-  const canvas = $('mainCanvas');
-  const ctx = canvas.getContext('2d');
+  const bgCanvas = $('bgCanvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const drawCanvas = $('drawCanvas');
+  const ctx = drawCanvas.getContext('2d');
+  
   const [label, text, curColor, historyEl, fileInput, wheel, lightInput, textInput, sizeInput, modal, resultImg] =
     ['uploadLabel', 'textLayer', 'currentColor', 'historyPalette', 'fileInput', 'colorWheel',
      'lightnessInput', 'textInput', 'sizeInput', 'modal', 'instaResultImg'].map($);
@@ -276,9 +293,13 @@
   const btnDeleteImg = $('btnDeleteImg');
   const btnDirectDownload = $('btnDirectDownload');
   const btnModalDownload = $('btnModalDownload');
+  
   const btnDrawMode = $('btnDrawMode');
+  const btnEraserMode = $('btnEraserMode');
   const brushSizeInput = $('brushSizeInput');
   const brushSizeValue = $('brushSizeValue');
+  const eraserSizeInput = $('eraserSizeInput');
+  const eraserSizeValue = $('eraserSizeValue');
   
   const btnUndo = $('btnUndo');
   const btnRedo = $('btnRedo');
@@ -292,9 +313,11 @@
   
   // 그리기 변수
   let isDrawingMode = false;
+  let isEraserMode = false;
   let isDrawing = false;
   let brushType = 'pen';
   let brushSize = 4;
+  let eraserSize = 20;
   let baseImage = null;
 
   // 히스토리(Undo/Redo) 변수
@@ -307,12 +330,13 @@
 
   /* ── 캔버스 초기화 및 히스토리 ── */
   function initCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
     if (baseImage) {
-      const s = Math.min(canvas.width / baseImage.width, canvas.height / baseImage.height);           
+      const s = Math.min(bgCanvas.width / baseImage.width, bgCanvas.height / baseImage.height);           
       const w = baseImage.width * s, h = baseImage.height * s;
-      ctx.drawImage(baseImage, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      bgCtx.drawImage(baseImage, (bgCanvas.width - w) / 2, (bgCanvas.height - h) / 2, w, h);
     }
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height); // 그림 레이어도 초기화
     saveHistory();
   }
 
@@ -320,7 +344,7 @@
     if (historyStep < canvasHistory.length - 1) {
       canvasHistory = canvasHistory.slice(0, historyStep + 1);
     }
-    canvasHistory.push(canvas.toDataURL());
+    canvasHistory.push(drawCanvas.toDataURL());
     if (canvasHistory.length > MAX_HISTORY) {
       canvasHistory.shift();
     } else {
@@ -337,7 +361,7 @@
   function restoreCanvas(dataUrl) {
     const img = new Image();
     img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       ctx.drawImage(img, 0, 0);
     };
     img.src = dataUrl;
@@ -392,8 +416,9 @@
     else wrap.style.maxWidth = '600px';
     
     const w = wrap.clientWidth;
-    canvas.width = w;
-    canvas.height = w * (parseFloat(val.split('/')[1]) / parseFloat(val.split('/')[0]));
+    bgCanvas.width = drawCanvas.width = w;
+    const h = w * (parseFloat(val.split('/')[1]) / parseFloat(val.split('/')[0]));
+    bgCanvas.height = drawCanvas.height = h;
     initCanvas();
   };
 
@@ -464,7 +489,7 @@
   textInput.oninput = () => text.textContent = textInput.value;
 
   text.addEventListener('mousedown', e => {
-    if (isDrawingMode) return;
+    if (isDrawingMode || isEraserMode) return;
     e.preventDefault();
     drag = 'text';
     text.classList.add('active');
@@ -472,12 +497,29 @@
     grab = { x: e.clientX - (r.left + textX / 100 * r.width), y: e.clientY - (r.top + textY / 100 * r.height) };
   });
 
-  /* ── 펜(그리기) 기능 ── */
+  /* ── 펜 및 지우개 모드 ── */
   btnDrawMode.onclick = () => {
     isDrawingMode = !isDrawingMode;
+    if (isDrawingMode) isEraserMode = false; 
+    
     btnDrawMode.textContent = isDrawingMode ? '🖊️ 그리기 모드 끄기' : '🖊️ 그리기 모드 켜기';
     btnDrawMode.classList.toggle('active', isDrawingMode);
-    wrap.classList.toggle('drawing', isDrawingMode);
+    btnEraserMode.textContent = '🧽 지우개 모드 켜기/끄기';
+    btnEraserMode.classList.remove('active');
+    
+    wrap.classList.toggle('drawing', isDrawingMode || isEraserMode);
+  };
+
+  btnEraserMode.onclick = () => {
+    isEraserMode = !isEraserMode;
+    if (isEraserMode) isDrawingMode = false; 
+    
+    btnEraserMode.textContent = isEraserMode ? '🧽 지우개 모드 끄기' : '🧽 지우개 모드 켜기/끄기';
+    btnEraserMode.classList.toggle('active', isEraserMode);
+    btnDrawMode.textContent = '🖊️ 그리기 모드 켜기/끄기';
+    btnDrawMode.classList.remove('active');
+
+    wrap.classList.toggle('drawing', isDrawingMode || isEraserMode);
   };
 
   document.querySelectorAll('.brush-item').forEach(item => {
@@ -493,28 +535,30 @@
     brushSizeValue.textContent = brushSize;
   };
 
+  eraserSizeInput.oninput = (e) => {
+    eraserSize = +e.target.value;
+    eraserSizeValue.textContent = eraserSize;
+  };
+
   let lastX = 0, lastY = 0;
 
   function getMousePos(e) {
-    const r = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / r.width;
-    const scaleY = canvas.height / r.height;
+    const r = drawCanvas.getBoundingClientRect();
+    const scaleX = drawCanvas.width / r.width;
+    const scaleY = drawCanvas.height / r.height;
     return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
   }
 
-  canvas.addEventListener('mousedown', e => {
-    if (!isDrawingMode) return;
+  drawCanvas.addEventListener('mousedown', e => {
+    if (!isDrawingMode && !isEraserMode) return;
     isDrawing = true;
     const pos = getMousePos(e);
     lastX = pos.x; lastY = pos.y;
-    
-    // 지우개는 드래그 시작 시 바로 지우기 시작
-    if (brushType === 'eraser') drawBrush(pos.x, pos.y, true);
-    else drawBrush(pos.x, pos.y, true);
+    drawBrush(pos.x, pos.y, true);
   });
 
-  canvas.addEventListener('mousemove', e => {
-    if (!isDrawing || !isDrawingMode) return;
+  drawCanvas.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
     const pos = getMousePos(e);
     drawBrush(pos.x, pos.y, false);
     lastX = pos.x; lastY = pos.y;
@@ -523,7 +567,7 @@
   window.addEventListener('mouseup', () => { 
     if (isDrawing) {
       isDrawing = false; 
-      saveHistory(); // 마우스를 뗄 때마다 히스토리 저장
+      saveHistory(); 
     }
   });
 
@@ -532,9 +576,9 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    if (brushType === 'eraser') {
+    if (isEraserMode) {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = brushSize * 3; // 지우개는 조금 더 두껍게
+      ctx.lineWidth = eraserSize;
       ctx.beginPath();
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
@@ -556,24 +600,19 @@
       ctx.stroke();
     } 
     else if (brushType === 'pencil') {
-      // 2번: 연필 두께 증가 및 텍스처
       ctx.globalAlpha = 0.7;
       ctx.lineWidth = brushSize + 2; 
       ctx.beginPath();
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
-      // 약간씩 흔들리는 효과
       ctx.lineTo(x + (Math.random()-0.5)*4, y + (Math.random()-0.5)*4);
       ctx.stroke();
-      
-      // 추가 텍스처 점 찍기
       ctx.globalAlpha = 0.4;
       ctx.beginPath();
       ctx.arc(x + (Math.random()-0.5)*10, y + (Math.random()-0.5)*10, brushSize/2, 0, Math.PI*2);
       ctx.fill();
     } 
     else if (brushType === 'neon') {
-      // 3번: 네온사인 끊김 해결 (선을 먼저 긋고 그림자만 적용)
       ctx.shadowBlur = 15;
       ctx.shadowColor = color;
       ctx.lineWidth = brushSize + 2;
@@ -581,26 +620,23 @@
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
       ctx.lineTo(x, y);
-      ctx.stroke(); // 번지는 효과
-      
+      ctx.stroke();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#fff'; // 코어
+      ctx.strokeStyle = '#fff';
       ctx.lineWidth = brushSize * 0.4;
-      ctx.stroke(); // 흰색 심지
+      ctx.stroke();
     } 
     else if (brushType === 'heart' || brushType === 'star') {
-      // 4번: 하트/별 스탬프 연속성
       const dist = Math.hypot(x - lastX, y - lastY);
-      if (dist > 25 || isStart) { // 25px마다 찍힘
+      if (dist > 25 || isStart) {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(Math.random() * Math.PI * 2);
-        const size = brushSize * 3; // 두께 조절에 따라 크기 변경
-        
+        const size = brushSize * 3;
         if (brushType === 'heart') drawHeart(ctx, 0, 0, size);
         if (brushType === 'star') drawStar(ctx, 0, 0, 5, size, size/2);
         ctx.restore();
-        lastX = x; lastY = y; // 도장 찍은 위치 갱신
+        lastX = x; lastY = y;
       }
     }
     ctx.restore();
@@ -640,7 +676,6 @@
     ctx.fill();
   }
 
-  /* ── 마우스 이동 / 놓기 (텍스트 및 색상) ── */
   window.addEventListener('mousemove', e => {
     if (drag === 'text') {
       const r = wrap.getBoundingClientRect();
@@ -659,15 +694,16 @@
     text.classList.remove('active');
   });
 
-  /* ── 캡처 및 다운로드 ── */
   function captureMainImage() {
     if (!baseImage) return null;
     
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
+    tempCanvas.width = drawCanvas.width;
+    tempCanvas.height = drawCanvas.height;
     const tCtx = tempCanvas.getContext('2d');
-    tCtx.drawImage(canvas, 0, 0);
+    
+    tCtx.drawImage(bgCanvas, 0, 0);
+    tCtx.drawImage(drawCanvas, 0, 0);
 
     if (text.style.display === 'block') {
       const cs = getComputedStyle(text);
