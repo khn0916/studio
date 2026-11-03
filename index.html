@@ -60,9 +60,11 @@
   .upload-guide { text-align: center; color: #999; pointer-events: none; }
   .upload-guide svg { width: 50px; height: 50px; margin-bottom: 10px; fill: #ccc; }
   
-  #mainImage { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; z-index: 1; }
+  /* 캔버스 및 텍스트 */
+  #mainCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; cursor: default; }
+  .canvas-wrapper.drawing #mainCanvas { cursor: crosshair; }
   
-  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; }
+  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; pointer-events: auto; }
   .text-layer.active { outline: 2px dashed #333; }
 
   /* 오른쪽 패널 */
@@ -87,12 +89,17 @@
   .arrow { font-size: .8rem; color: #888; transition: transform .2s; }
   .accordion.open .arrow { transform: rotate(180deg); }
   .accordion-content { max-height: 0; padding: 0 15px; overflow: hidden; background: #fafafa; transition: max-height .3s ease-out; }
-  .accordion.open .accordion-content { max-height: 300px; padding: 15px; overflow-y: auto; }
-  .emoji-row { display: flex; gap: 10px; flex-wrap: wrap; font-size: 1.5rem; }
-  .emoji-row span { cursor: pointer; }
+  .accordion.open .accordion-content { max-height: 400px; padding: 15px; overflow-y: auto; }
+
   .tool-btn { width: 100%; padding: 10px; margin-bottom: 10px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 6px; text-align: left; cursor: pointer; transition: .2s; }
   .tool-btn:hover { background: #e0e0e0; }
+  .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .tool-btn.primary { background: var(--accent); color: #fff; text-align: center; }
+
+  .brush-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+  .brush-item { padding: 8px; font-size: 0.8rem; text-align: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
+  .brush-item.active { background: #333; color: #fff; border-color: #333; }
+
   .input-group { margin-bottom: 15px; }
   .input-group label { display: block; margin-bottom: 5px; font-size: .9rem; color: #666; }
   .input-group input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; }
@@ -106,7 +113,6 @@
   .insta-profile { width: 36px; height: 36px; border-radius: 50%; background: #ddd; font-size: 1.2rem; }
   .insta-nick { font-weight: bold; font-size: .95rem; }
   
-  /* 1:1 비율 강제 수정 */
   .insta-main { width: 100%; aspect-ratio: 1 / 1; background: #000; overflow: hidden; }
   .insta-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
   
@@ -156,7 +162,9 @@
           </div>
         </label>
         <input type="file" id="fileInput" accept="image/png, image/jpeg" hidden>
-        <img id="mainImage" alt="메인 이미지">
+        
+        <!-- 캔버스로 변경됨 -->
+        <canvas id="mainCanvas" width="600" height="600"></canvas>
         <div class="text-layer" id="textLayer">텍스트를 입력하세요</div>
       </div>
     </div>
@@ -171,20 +179,29 @@
         <div class="history-palette" id="historyPalette"></div>
       </div>
 
-      <div class="accordion">
+      <!-- 펜 도구 활성화 -->
+      <div class="accordion" id="accPen">
         <div class="accordion-header"><span>🖊️ 펜 (그리기)</span><span class="arrow">▼</span></div>
         <div class="accordion-content">
-          <button class="tool-btn" data-soon="펜 기능은 다음 업데이트에!">자유 곡선</button>
-          <button class="tool-btn" data-soon="펜 기능은 다음 업데이트에!">직선</button>
+          <button class="tool-btn" id="btnDrawMode">🖊️ 그리기 모드 켜기/끄기</button>
+          
+          <div style="font-size:0.85rem; color:#666; margin-bottom:5px;">브러시 종류</div>
+          <div class="brush-grid">
+            <div class="brush-item active" data-brush="pen">볼펜</div>
+            <div class="brush-item" data-brush="pencil">연필</div>
+            <div class="brush-item" data-brush="neon">네온사인</div>
+            <div class="brush-item" data-brush="heart">하트</div>
+            <div class="brush-item" data-brush="star">별</div>
+          </div>
         </div>
       </div>
 
       <div class="accordion">
         <div class="accordion-header"><span>😊 이모지</span><span class="arrow">▼</span></div>
         <div class="accordion-content">
-          <div class="emoji-row">
-            <span data-soon="이모지 기능 준비 중!">😈</span><span data-soon="이모지 기능 준비 중!">🤺</span>
-            <span data-soon="이모지 기능 준비 중!">🔥</span><span data-soon="이모지 기능 준비 중!">💖</span>
+          <div class="emoji-row" style="display:flex; gap:10px; flex-wrap:wrap; font-size:1.5rem;">
+            <span data-soon="이모지 기능 준비 중!" style="cursor:pointer;">😈</span><span data-soon="이모지 기능 준비 중!" style="cursor:pointer;">🤺</span>
+            <span data-soon="이모지 기능 준비 중!" style="cursor:pointer;">🔥</span><span data-soon="이모지 기능 준비 중!" style="cursor:pointer;">💖</span>
           </div>
         </div>
       </div>
@@ -205,7 +222,6 @@
     <button class="close-modal" id="btnCloseModal">×</button>
     <div class="insta-modal">
       <div class="insta-header"><div class="insta-profile">🦋</div><div class="insta-nick">ALEPH_Studio</div></div>
-      <!-- 1:1 비율 강제 -->
       <div class="insta-main"><img id="instaResultImg" alt="완성된 짤"></div>
       
       <div class="insta-footer">
@@ -220,8 +236,11 @@
 
 <script>
   const $ = id => document.getElementById(id);
-  const [wrap, img, label, text, curColor, historyEl, fileInput, wheel, lightInput, textInput, sizeInput, modal, resultImg] =
-    ['canvasWrapper', 'mainImage', 'uploadLabel', 'textLayer', 'currentColor', 'historyPalette', 'fileInput', 'colorWheel',
+  const wrap = $('canvasWrapper');
+  const canvas = $('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const [label, text, curColor, historyEl, fileInput, wheel, lightInput, textInput, sizeInput, modal, resultImg] =
+    ['uploadLabel', 'textLayer', 'currentColor', 'historyPalette', 'fileInput', 'colorWheel',
      'lightnessInput', 'textInput', 'sizeInput', 'modal', 'instaResultImg'].map($);
   
   const btnUploadIcon = $('btnUploadIcon');
@@ -229,33 +248,56 @@
   const btnDeleteImg = $('btnDeleteImg');
   const btnDirectDownload = $('btnDirectDownload');
   const btnModalDownload = $('btnModalDownload');
+  const btnDrawMode = $('btnDrawMode');
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
   let hue = 0, lightness = 50, color;                       
   let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];
   let drag = null, grab = null;                             
-  let textX = 50, textY = 50;                               
+  let textX = 50, textY = 50;
+  
+  // 그리기 변수
+  let isDrawingMode = false;
+  let isDrawing = false;
+  let brushType = 'pen';
+  let baseImage = null; // 불러온 원본 배경 이미지 저장용
 
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
+  /* ── 캔버스 초기화 및 그리기 ── */
+  function initCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (baseImage) {
+      // object-fit: contain 로직
+      const s = Math.min(canvas.width / baseImage.width, canvas.height / baseImage.height);           
+      const w = baseImage.width * s, h = baseImage.height * s;
+      ctx.drawImage(baseImage, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+    }
+  }
+
   /* ── 이미지 업로드 / 삭제 ── */
   function handleFile(file) {
     if (!['image/png', 'image/jpeg'].includes(file.type)) return alert('지원하지 않는 파일 형식입니다. PNG 또는 JPEG 파일만 사용 가능합니다.');
-    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-    img.src = URL.createObjectURL(file);
-    img.style.display = 'block';
-    label.style.display = 'none';
-    btnDeleteImg.style.display = 'flex';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        baseImage = img;
+        initCanvas();
+        label.style.display = 'none';
+        btnDeleteImg.style.display = 'flex';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
   
   btnUploadIcon.onclick = () => fileInput.click();
-
   btnDeleteImg.onclick = () => {
-    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-    img.src = '';
-    img.style.display = 'none';
+    baseImage = null;
+    initCanvas();
     label.style.display = 'flex';
     btnDeleteImg.style.display = 'none';
   };
@@ -263,15 +305,18 @@
   ratioSelect.onchange = (e) => {
     const val = e.target.value;
     wrap.style.aspectRatio = val;
-    if (val === '9/16') {
-      wrap.style.maxWidth = '340px'; 
-    } else if (val === '4/5') {
-      wrap.style.maxWidth = '480px';
-    } else {
-      wrap.style.maxWidth = '600px';
-    }
+    if (val === '9/16') wrap.style.maxWidth = '340px'; 
+    else if (val === '4/5') wrap.style.maxWidth = '480px';
+    else wrap.style.maxWidth = '600px';
+    
+    // 캔버스 해상도 맞추기 (대략적인 비율에 맞춰)
+    const w = wrap.clientWidth;
+    canvas.width = w;
+    canvas.height = w * (parseFloat(val.split('/')[1]) / parseFloat(val.split('/')[0]));
+    initCanvas();
   };
 
+  // 드래그 앤 드롭
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(type => wrap.addEventListener(type, e => {
     e.preventDefault();
     e.stopPropagation();
@@ -339,6 +384,7 @@
   textInput.oninput = () => text.textContent = textInput.value;
 
   text.addEventListener('mousedown', e => {
+    if (isDrawingMode) return; // 그리기 모드일 땐 텍스트 드래그 방지
     e.preventDefault();
     drag = 'text';
     text.classList.add('active');
@@ -346,166 +392,114 @@
     grab = { x: e.clientX - (r.left + textX / 100 * r.width), y: e.clientY - (r.top + textY / 100 * r.height) };
   });
 
-  window.addEventListener('mousemove', e => {
-    if (drag === 'text') {
-      const r = wrap.getBoundingClientRect();
-      textX = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
-      textY = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
-      text.style.left = textX + '%';
-      text.style.top = textY + '%';
-    } else if (drag) pick(e);
+  /* ── 펜(그리기) 기능 ── */
+  btnDrawMode.onclick = () => {
+    isDrawingMode = !isDrawingMode;
+    btnDrawMode.textContent = isDrawingMode ? '🖊️ 그리기 모드 끄기' : '🖊️ 그리기 모드 켜기';
+    btnDrawMode.classList.toggle('active', isDrawingMode);
+    wrap.classList.toggle('drawing', isDrawingMode);
+  };
+
+  document.querySelectorAll('.brush-item').forEach(item => {
+    item.onclick = () => {
+      document.querySelectorAll('.brush-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      brushType = item.dataset.brush;
+    };
   });
-  window.addEventListener('mouseup', () => {
-    if (drag === 'hue') remember(color);                       
-    drag = null;
-    text.classList.remove('active');
-  });
 
-  /* ── 메인 캔버스 캡처 (사진만) ── */
-  function captureMainImage() {
-    if (!img.naturalWidth) return null;
-    const c = document.createElement('canvas');
-    c.width = wrap.clientWidth;
-    c.height = wrap.clientHeight;
-    const ctx = c.getContext('2d');
+  let lastX = 0, lastY = 0;
+  let stampTime = 0; // 도장 간격 조절용
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, c.width, c.height);
-
-    const s = Math.min(c.width / img.naturalWidth, c.height / img.naturalHeight);           
-    const w = img.naturalWidth * s, h = img.naturalHeight * s;
-    ctx.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h);
-
-    if (text.style.display === 'block') {
-      const cs = getComputedStyle(text);
-      Object.assign(ctx, {
-        font: `bold ${parseInt(cs.fontSize)}px 'Pretendard', sans-serif`, fillStyle: cs.color,
-        textAlign: 'center', textBaseline: 'middle',
-        shadowColor: 'rgba(0,0,0,0.8)', shadowBlur: 4, shadowOffsetX: 2, shadowOffsetY: 2,
-      });
-      ctx.fillText(text.textContent, textX / 100 * c.width, textY / 100 * c.height);
-    }
-    return c.toDataURL('image/png');
+  function getMousePos(e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
   }
 
-  /* ── 인스타 피드 전체 캡처 ── */
-  function captureInstaFeed(mainImageDataUrl) {
-    return new Promise((resolve) => {
-      const feedWidth = 400;
-      const headerHeight = 60;
-      const imageSize = 400; 
-      const footerHeight = 110; 
-      
-      const c = document.createElement('canvas');
-      c.width = feedWidth;
-      c.height = headerHeight + imageSize + footerHeight;
-      const ctx = c.getContext('2d');
+  canvas.addEventListener('mousedown', e => {
+    if (!isDrawingMode) return;
+    isDrawing = true;
+    const pos = getMousePos(e);
+    lastX = pos.x; lastY = pos.y;
+    drawBrush(pos.x, pos.y, true);
+  });
 
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, c.width, c.height);
+  canvas.addEventListener('mousemove', e => {
+    if (!isDrawing || !isDrawingMode) return;
+    const pos = getMousePos(e);
+    drawBrush(pos.x, pos.y, false);
+    lastX = pos.x; lastY = pos.y;
+  });
 
-      // 헤더
-      ctx.fillStyle = '#f0f0f0';
+  window.addEventListener('mouseup', () => { isDrawing = false; });
+
+  function drawBrush(x, y, isStart) {
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+
+    if (brushType === 'pen') {
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(35, 30, 18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.font = '16px Arial';
-      ctx.fillStyle = '#000';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🦋', 27, 31);
-      ctx.font = 'bold 14px "Pretendard", sans-serif';
-      ctx.fillText('ALEPH_Studio', 65, 31);
-      
-      ctx.strokeStyle = '#eee';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, headerHeight);
-      ctx.lineTo(feedWidth, headerHeight);
+      if (isStart) ctx.moveTo(x, y);
+      else ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
       ctx.stroke();
-
-      // 사진 (1:1 강제 크롭)
-      const imgObj = new Image();
-      imgObj.onload = () => {
-        const imgRatio = imgObj.width / imgObj.height;
-        let sx, sy, sWidth, sHeight;
+    } 
+    else if (brushType === 'pencil') {
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (isStart) ctx.moveTo(x, y);
+      else ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x + (Math.random()-0.5)*3, y + (Math.random()-0.5)*3); // 약간 거친 효과
+      ctx.stroke();
+    } 
+    else if (brushType === 'neon') {
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      if (isStart) ctx.moveTo(x, y);
+      else ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      // 코어 선
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } 
+    else if (brushType === 'heart' || brushType === 'star') {
+      // 일정 거리마다 도장 찍기
+      const dist = Math.hypot(x - lastX, y - lastY);
+      if (dist > 30 || isStart) {
+        ctx.save();
+        ctx.translate(x, y);
+        // 랜덤 회전 및 크기
+        ctx.rotate(Math.random() * Math.PI * 2);
+        const size = 10 + Math.random() * 10;
         
-        if (imgRatio > 1) {
-          sHeight = imgObj.height;
-          sWidth = imgObj.height;
-          sx = (imgObj.width - sWidth) / 2;
-          sy = 0;
-        } else {
-          sWidth = imgObj.width;
-          sHeight = imgObj.width;
-          sx = 0;
-          sy = (imgObj.height - sHeight) / 2;
-        }
-        
-        ctx.drawImage(imgObj, sx, sy, sWidth, sHeight, 0, headerHeight, imageSize, imageSize);
-
-        // 하단 (아이콘 -> 캡션 순서)
-        const footerY = headerHeight + imageSize;
-        
-        ctx.font = '20px Arial';
-        ctx.fillStyle = '#000'; 
-        ctx.fillText('❤️', 15, footerY + 25);
-        ctx.fillText('💬', 50, footerY + 25);
-        ctx.fillText('✈️', 85, footerY + 25);
-
-        ctx.font = 'bold 13px "Pretendard", sans-serif';
-        ctx.fillText('ALEPH_Studio', 15, footerY + 60);
-        ctx.font = '13px "Pretendard", sans-serif';
-        ctx.fillStyle = '#333';
-        ctx.fillText('제가 만들었어요!', 105, footerY + 60);
-        
-        ctx.fillStyle = '#00376b';
-        ctx.fillText('#SKTagram #CardStudio', 15, footerY + 85);
-
-        resolve(c.toDataURL('image/png'));
-      };
-      imgObj.src = mainImageDataUrl;
-    });
+        if (brushType === 'heart') drawHeart(ctx, 0, 0, size);
+        if (brushType === 'star') drawStar(ctx, 0, 0, 5, size, size/2);
+        ctx.restore();
+        lastX = x; lastY = y; // 도장 찍은 위치 갱신
+      }
+    }
+    ctx.restore();
   }
 
-  /* ── 버튼 이벤트 ── */
-  btnDirectDownload.onclick = () => {
-    const dataUrl = captureMainImage();
-    if (dataUrl) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'card_studio_image.png';
-      a.click();
-    } else {
-      alert('먼저 이미지를 불러와주세요!');
-    }
-  };
-
-  $('btnComplete').onclick = () => {
-    const dataUrl = captureMainImage();
-    if (dataUrl) {
-      resultImg.src = dataUrl;
-      modal.classList.add('show');
-    } else {
-      alert('먼저 이미지를 불러와주세요!');
-    }
-  };
-
-  btnModalDownload.onclick = async () => {
-    if (!resultImg.src) return;
-    const feedDataUrl = await captureInstaFeed(resultImg.src);
-    const a = document.createElement('a');
-    a.href = feedDataUrl;
-    a.download = 'card_studio_instagram.png';
-    a.click();
-  };
-
-  $('btnCloseModal').onclick = () => modal.classList.remove('show');
-  modal.onclick = e => { if (e.target === modal) modal.classList.remove('show'); };
-
-  remember('#FFFFFF');                                        
-  renderTrack();
-  updateColor();                                              
-</script>
-</body>
-</html>
+  // 하트 그리기 유틸
+  function drawHeart(ctx, x, y, size) {
+    ctx.beginPath();
+    const topCurveHeight = size * 0.3;
+    ctx.moveTo(x, y + topCurveHeight);
+    ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+    ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 1.2, x, y + size);
+    ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 1.2, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+    ctx.bezierCurveTo(x + size / 2, y
+                      
