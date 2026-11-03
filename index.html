@@ -21,7 +21,7 @@
 
   /* 메인 캔버스 */
   .main-container { display: flex; flex: 1; overflow: hidden; }
-  .center-panel { flex: 1; padding: 30px; background: #e9ecef; }
+  .center-panel { flex: 1; padding: 30px; background: #e9ecef; position: relative; }
   
   .canvas-wrapper { 
     position: relative; 
@@ -56,11 +56,23 @@
     padding: 6px; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: #333;
   }
 
+  /* 편의 기능: 뒤로/앞으로 가기 */
+  .canvas-bottom-bar {
+    position: absolute; bottom: 10px; left: 10px;
+    display: flex; gap: 8px; z-index: 20; pointer-events: auto;
+  }
+  .history-btn {
+    background: rgba(255,255,255,0.9); border: 2px solid var(--accent); border-radius: 6px;
+    padding: 6px 12px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: var(--accent);
+  }
+  .history-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: #ccc; color: #ccc; }
+  .history-btn:hover:not(:disabled) { background: #fff; }
+
   .upload-label { position: absolute; inset: 0; cursor: pointer; z-index: 5; }
   .upload-guide { text-align: center; color: #999; pointer-events: none; }
   .upload-guide svg { width: 50px; height: 50px; margin-bottom: 10px; fill: #ccc; }
   
-  /* 캔버스 및 텍스트 레이어 */
   #mainCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; cursor: default; }
   .canvas-wrapper.drawing #mainCanvas { cursor: crosshair; }
   
@@ -89,7 +101,7 @@
   .arrow { font-size: .8rem; color: #888; transition: transform .2s; }
   .accordion.open .arrow { transform: rotate(180deg); }
   .accordion-content { max-height: 0; padding: 0 15px; overflow: hidden; background: #fafafa; transition: max-height .3s ease-out; }
-  .accordion.open .accordion-content { max-height: 400px; padding: 15px; overflow-y: auto; }
+  .accordion.open .accordion-content { max-height: 500px; padding: 15px; overflow-y: auto; }
 
   .tool-btn { width: 100%; padding: 10px; margin-bottom: 10px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 6px; text-align: left; cursor: pointer; transition: .2s; }
   .tool-btn:hover { background: #e0e0e0; }
@@ -99,6 +111,10 @@
   .brush-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
   .brush-item { padding: 8px; font-size: 0.8rem; text-align: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
   .brush-item.active { background: #333; color: #fff; border-color: #333; }
+
+  /* 브러시 두께 조절 */
+  .brush-size-control { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 0.85rem; color: #555; }
+  .brush-size-control input { flex: 1; }
 
   .input-group { margin-bottom: 15px; }
   .input-group label { display: block; margin-bottom: 5px; font-size: .9rem; color: #666; }
@@ -165,6 +181,12 @@
         
         <canvas id="mainCanvas" width="600" height="600"></canvas>
         <div class="text-layer" id="textLayer">텍스트를 입력하세요</div>
+        
+        <!-- 편의 기능: 뒤로/앞으로 가기 -->
+        <div class="canvas-bottom-bar">
+          <button class="history-btn" id="btnUndo" disabled>⏪</button>
+          <button class="history-btn" id="btnRedo" disabled>⏩</button>
+        </div>
       </div>
     </div>
 
@@ -190,6 +212,14 @@
             <div class="brush-item" data-brush="neon">네온사인</div>
             <div class="brush-item" data-brush="heart">하트</div>
             <div class="brush-item" data-brush="star">별</div>
+            <div class="brush-item" data-brush="eraser">지우개</div>
+          </div>
+
+          <!-- 1번: 두께 조절 바 추가 -->
+          <div class="brush-size-control">
+            <span>두께</span>
+            <input type="range" id="brushSizeInput" min="1" max="30" value="4">
+            <span id="brushSizeValue">4</span>
           </div>
         </div>
       </div>
@@ -247,6 +277,11 @@
   const btnDirectDownload = $('btnDirectDownload');
   const btnModalDownload = $('btnModalDownload');
   const btnDrawMode = $('btnDrawMode');
+  const brushSizeInput = $('brushSizeInput');
+  const brushSizeValue = $('brushSizeValue');
+  
+  const btnUndo = $('btnUndo');
+  const btnRedo = $('btnRedo');
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -259,12 +294,18 @@
   let isDrawingMode = false;
   let isDrawing = false;
   let brushType = 'pen';
+  let brushSize = 4;
   let baseImage = null;
+
+  // 히스토리(Undo/Redo) 변수
+  let canvasHistory = [];
+  let historyStep = -1;
+  const MAX_HISTORY = 20;
 
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
-  /* ── 캔버스 초기화 ── */
+  /* ── 캔버스 초기화 및 히스토리 ── */
   function initCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (baseImage) {
@@ -272,7 +313,51 @@
       const w = baseImage.width * s, h = baseImage.height * s;
       ctx.drawImage(baseImage, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
     }
+    saveHistory();
   }
+
+  function saveHistory() {
+    if (historyStep < canvasHistory.length - 1) {
+      canvasHistory = canvasHistory.slice(0, historyStep + 1);
+    }
+    canvasHistory.push(canvas.toDataURL());
+    if (canvasHistory.length > MAX_HISTORY) {
+      canvasHistory.shift();
+    } else {
+      historyStep++;
+    }
+    updateHistoryButtons();
+  }
+
+  function updateHistoryButtons() {
+    btnUndo.disabled = historyStep <= 0;
+    btnRedo.disabled = historyStep >= canvasHistory.length - 1;
+  }
+
+  function restoreCanvas(dataUrl) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = dataUrl;
+  }
+
+  btnUndo.onclick = () => {
+    if (historyStep > 0) {
+      historyStep--;
+      restoreCanvas(canvasHistory[historyStep]);
+      updateHistoryButtons();
+    }
+  };
+
+  btnRedo.onclick = () => {
+    if (historyStep < canvasHistory.length - 1) {
+      historyStep++;
+      restoreCanvas(canvasHistory[historyStep]);
+      updateHistoryButtons();
+    }
+  };
 
   /* ── 이미지 업로드 / 삭제 ── */
   function handleFile(file) {
@@ -306,7 +391,6 @@
     else if (val === '4/5') wrap.style.maxWidth = '480px';
     else wrap.style.maxWidth = '600px';
     
-    // 캔버스 해상도 맞추기
     const w = wrap.clientWidth;
     canvas.width = w;
     canvas.height = w * (parseFloat(val.split('/')[1]) / parseFloat(val.split('/')[0]));
@@ -404,6 +488,11 @@
     };
   });
 
+  brushSizeInput.oninput = (e) => {
+    brushSize = +e.target.value;
+    brushSizeValue.textContent = brushSize;
+  };
+
   let lastX = 0, lastY = 0;
 
   function getMousePos(e) {
@@ -418,7 +507,10 @@
     isDrawing = true;
     const pos = getMousePos(e);
     lastX = pos.x; lastY = pos.y;
-    drawBrush(pos.x, pos.y, true);
+    
+    // 지우개는 드래그 시작 시 바로 지우기 시작
+    if (brushType === 'eraser') drawBrush(pos.x, pos.y, true);
+    else drawBrush(pos.x, pos.y, true);
   });
 
   canvas.addEventListener('mousemove', e => {
@@ -428,17 +520,35 @@
     lastX = pos.x; lastY = pos.y;
   });
 
-  window.addEventListener('mouseup', () => { isDrawing = false; });
+  window.addEventListener('mouseup', () => { 
+    if (isDrawing) {
+      isDrawing = false; 
+      saveHistory(); // 마우스를 뗄 때마다 히스토리 저장
+    }
+  });
 
   function drawBrush(x, y, isStart) {
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    if (brushType === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = brushSize * 3; // 지우개는 조금 더 두껍게
+      ctx.beginPath();
+      if (isStart) ctx.moveTo(x, y);
+      else ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
 
     if (brushType === 'pen') {
-      ctx.lineWidth = 3;
+      ctx.lineWidth = brushSize;
       ctx.beginPath();
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
@@ -446,40 +556,51 @@
       ctx.stroke();
     } 
     else if (brushType === 'pencil') {
-      ctx.globalAlpha = 0.6;
-      ctx.lineWidth = 1.5;
+      // 2번: 연필 두께 증가 및 텍스처
+      ctx.globalAlpha = 0.7;
+      ctx.lineWidth = brushSize + 2; 
       ctx.beginPath();
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
-      ctx.lineTo(x + (Math.random()-0.5)*3, y + (Math.random()-0.5)*3);
+      // 약간씩 흔들리는 효과
+      ctx.lineTo(x + (Math.random()-0.5)*4, y + (Math.random()-0.5)*4);
       ctx.stroke();
+      
+      // 추가 텍스처 점 찍기
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.arc(x + (Math.random()-0.5)*10, y + (Math.random()-0.5)*10, brushSize/2, 0, Math.PI*2);
+      ctx.fill();
     } 
     else if (brushType === 'neon') {
-      ctx.shadowBlur = 10;
+      // 3번: 네온사인 끊김 해결 (선을 먼저 긋고 그림자만 적용)
+      ctx.shadowBlur = 15;
       ctx.shadowColor = color;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = brushSize + 2;
       ctx.beginPath();
       if (isStart) ctx.moveTo(x, y);
       else ctx.moveTo(lastX, lastY);
       ctx.lineTo(x, y);
-      ctx.stroke();
+      ctx.stroke(); // 번지는 효과
+      
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      ctx.strokeStyle = '#fff'; // 코어
+      ctx.lineWidth = brushSize * 0.4;
+      ctx.stroke(); // 흰색 심지
     } 
     else if (brushType === 'heart' || brushType === 'star') {
+      // 4번: 하트/별 스탬프 연속성
       const dist = Math.hypot(x - lastX, y - lastY);
-      if (dist > 30 || isStart) {
+      if (dist > 25 || isStart) { // 25px마다 찍힘
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(Math.random() * Math.PI * 2);
-        const size = 10 + Math.random() * 10;
+        const size = brushSize * 3; // 두께 조절에 따라 크기 변경
         
         if (brushType === 'heart') drawHeart(ctx, 0, 0, size);
         if (brushType === 'star') drawStar(ctx, 0, 0, 5, size, size/2);
         ctx.restore();
-        lastX = x; lastY = y;
+        lastX = x; lastY = y; // 도장 찍은 위치 갱신
       }
     }
     ctx.restore();
@@ -519,7 +640,7 @@
     ctx.fill();
   }
 
-  /* ── 마우스 이동 / 놓기 ── */
+  /* ── 마우스 이동 / 놓기 (텍스트 및 색상) ── */
   window.addEventListener('mousemove', e => {
     if (drag === 'text') {
       const r = wrap.getBoundingClientRect();
@@ -542,20 +663,16 @@
   function captureMainImage() {
     if (!baseImage) return null;
     
-    // 메인 캔버스 복사
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     const tCtx = tempCanvas.getContext('2d');
     tCtx.drawImage(canvas, 0, 0);
 
-    // 텍스트가 있으면 그리기
     if (text.style.display === 'block') {
       const cs = getComputedStyle(text);
-      // 텍스트 위치를 캔버스 비율에 맞게 계산
       const tX = (textX / 100) * tempCanvas.width;
       const tY = (textY / 100) * tempCanvas.height;
-      // 폰트 사이즈도 캔버스 비율에 맞게 스케일링
       const scale = tempCanvas.width / wrap.clientWidth;
       const fontSize = parseInt(cs.fontSize) * scale;
       
