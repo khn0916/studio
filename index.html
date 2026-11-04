@@ -247,22 +247,21 @@
   const bgCtx = bgCanvas.getContext('2d'), ctx = drawCanvas.getContext('2d');
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const TAU = Math.PI * 2;
-  const MAX_WIDTH = { '1/1': 600, '4/5': 480, '9/16': 340 };      // 비율별 사진칸 최대 가로(px)
+  const MAX_WIDTH = { '1/1': 600, '4/5': 480, '9/16': 340 };
   const MAX_HISTORY = 20;
-  const FONTS = {                                                  // 글꼴이 없는 컴퓨터에서는 뒤쪽 글꼴로 대신 표시
+  const FONTS = {
     gothic: "'Pretendard', 'Malgun Gothic', 'Noto Sans KR', sans-serif",
     myeongjo: "'Batang', '바탕', 'Noto Serif KR', 'AppleMyungjo', serif",
     gulim: "'Gulim', '굴림', 'Dotum', '돋움', 'Noto Sans KR', sans-serif",
     gungsuh: "'Gungsuh', '궁서', 'GungsuhChe', 'Noto Serif KR', serif",
   };
 
-  let hue = 0, lightness = 50, color;                              // 현재 색 (색상 0~360, 명도 0~100)
-  let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];   // 사용기록 (최대 5개)
-  let drag = null, grab = null, selected = false;                  // 드래그 대상: 'hue' | 'text' | 'rotate'
-  // 텍스트 상태 한 곳에 모아 두고 renderText()로 화면에 반영 (실행 취소 기록에도 이 값이 그대로 저장됨)
+  let hue = 0, lightness = 50, color;
+  let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];
+  let drag = null, grab = null, selected = false;
   const T = { shown: false, content: '텍스트를 입력하세요', size: 40, color: null, x: 50, y: 50, rot: 0, font: 'gothic' };
 
-  let mode = null, brushType = 'pen', brushSize = 4, eraserSize = 20;   // 그리기 모드: 'draw' | 'erase' | null
+  let mode = null, brushType = 'pen', brushSize = 4, eraserSize = 20;
   let isDrawing = false, lastX = 0, lastY = 0, stampX = 0, stampY = 0;
   let baseImage = null, drawingReference = null, restoreToken = 0;
   let canvasHistory = [], historyStep = -1;
@@ -270,8 +269,8 @@
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
-  /* ── 텍스트: 상태(T) → 화면 ── */
-  function renderText(w = wrap.clientWidth) {                      // w: 사진칸 가로 (글자 크기는 600px 기준으로 비례)
+  /* ── 텍스트 ── */
+  function renderText(w = wrap.clientWidth) {
     textBody.textContent = T.content;
     Object.assign(text.style, {
       display: T.shown ? 'block' : 'none', left: T.x + '%', top: T.y + '%', color: T.color,
@@ -281,9 +280,9 @@
     document.querySelectorAll('.font-item').forEach(b => b.classList.toggle('active', b.dataset.font === T.font));
   }
 
-  /* ── 캔버스 / 실행 취소·다시 실행 ── */
+  /* ── 캔버스 / 실행 취소 ── */
   const cloneCanvas = src => { const c = Object.assign(document.createElement('canvas'), { width: src.width, height: src.height }); c.getContext('2d').drawImage(src, 0, 0); return c; };
-  const fitBox = (sw, sh, dw, dh) => { const s = Math.min(dw / sw, dh / sh); return [(dw - sw * s) / 2, (dh - sh * s) / 2, sw * s, sh * s]; };   // contain 배치
+  const fitBox = (sw, sh, dw, dh) => { const s = Math.min(dw / sw, dh / sh); return [(dw - sw * s) / 2, (dh - sh * s) / 2, sw * s, sh * s]; };
   const resizeCanvases = (w, h) => { bgCanvas.width = drawCanvas.width = w; bgCanvas.height = drawCanvas.height = h; };
   const setRatio = v => { wrap.style.aspectRatio = v; wrap.style.maxWidth = MAX_WIDTH[v] + 'px'; };
 
@@ -293,7 +292,7 @@
   }
 
   function saveHistory(updateRef = false) {
-    canvasHistory = canvasHistory.slice(0, historyStep + 1);       // 되돌린 상태에서 새로 하면 뒤쪽 기록 삭제
+    canvasHistory = canvasHistory.slice(0, historyStep + 1);
     canvasHistory.push({ drawData: drawCanvas.toDataURL('image/png'), width: drawCanvas.width, height: drawCanvas.height, ratio: ratioSelect.value, text: { ...T } });
     if (canvasHistory.length > MAX_HISTORY) canvasHistory.shift();
     historyStep = canvasHistory.length - 1;
@@ -311,14 +310,14 @@
     setRatio(s.ratio);
     resizeCanvases(s.width, s.height);
     renderBackground();
-    Object.assign(T, s.text);                                      // 글자 내용·크기·색·위치·회전·글꼴을 한 번에 복원
+    Object.assign(T, s.text);
     textInput.value = T.content;
     sizeInput.value = T.size;
     renderText(s.width);
 
     const im = new Image();
     im.onload = im.onerror = () => {
-      if (token !== restoreToken) return;                          // 빠르게 되돌리는 중 오래된 그림이 덮어쓰지 않게
+      if (token !== restoreToken) return;
       ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       if (im.naturalWidth) ctx.drawImage(im, 0, 0, drawCanvas.width, drawCanvas.height);
       drawingReference = cloneCanvas(drawCanvas);
@@ -335,7 +334,7 @@
   btnUndo.onclick = () => moveHistory(-1);
   btnRedo.onclick = () => moveHistory(1);
 
-  function initCanvas() {                                          // 새 사진·삭제는 새 작업으로 보고 기록을 처음부터
+  function initCanvas() {
     restoreToken++;
     renderBackground();
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
@@ -345,7 +344,7 @@
     saveHistory(true);
   }
 
-  /* ── 사진 불러오기 / 삭제 / 비율 ── */
+  /* ── 사진 불러오기 ── */
   function showPhoto(on) {
     label.style.display = on ? 'none' : 'flex';
     btnDelete.hidden = !on;
@@ -359,29 +358,27 @@
     }
     const im = new Image();
     im.onload = () => { URL.revokeObjectURL(im.src); baseImage = im; initCanvas(); showPhoto(true); fileInput.value = ''; };
-    im.onerror = () => { alert('이미지를 불러오지 못했습니다. 다른 이미지 파일을 선택해주세요.'); fileInput.value = ''; };
+    im.onerror = () => { alert('이미지를 불러오지 못했습니다.'); fileInput.value = ''; };
     im.src = URL.createObjectURL(file);
   }
   $('btnUploadIcon').onclick = () => fileInput.click();
   btnDelete.onclick = () => { baseImage = null; initCanvas(); showPhoto(false); };
   fileInput.onchange = e => handleFile(e.target.files[0]);
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(type => wrap.addEventListener(type, e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     wrap.classList.toggle('drag-over', type === 'dragenter' || type === 'dragover');
     if (type === 'drop') handleFile(e.dataTransfer.files[0]);
   }));
 
   ratioSelect.onchange = () => {
     const v = ratioSelect.value, [rw, rh] = v.split('/').map(Number);
-    const src = drawingReference || cloneCanvas(drawCanvas);       // 크기를 바꾸기 전에 펜 그림 원본 확보
+    const src = drawingReference || cloneCanvas(drawCanvas);
     setRatio(v);
-    // 칸 너비에는 0.3초 전환 애니메이션이 있어서, 현재 너비 대신 목표 너비로 계산
     const w = Math.max(1, Math.round(Math.min(MAX_WIDTH[v], wrap.parentElement.clientWidth)));
     restoreToken++;
     resizeCanvases(w, Math.max(1, Math.round(w * rh / rw)));
     renderBackground();
-    ctx.drawImage(src, ...fitBox(src.width, src.height, drawCanvas.width, drawCanvas.height));   // 펜 그림은 찌그러지지 않게 비율 유지
+    ctx.drawImage(src, ...fitBox(src.width, src.height, drawCanvas.width, drawCanvas.height));
     renderText(w);
     saveHistory(false);
   };
@@ -409,9 +406,9 @@
     renderText();
   }
   const updateColor = () => applyColor(hslToHex(hue, 100, lightness));
-  const renderTrack = () => lightInput.style.background = `linear-gradient(to right, #000, hsl(${hue}, 100%, 50%), #fff)`;   // 밝기 막대: 검정 → 선택한 색 → 흰색
+  const renderTrack = () => lightInput.style.background = `linear-gradient(to right, #000, hsl(${hue}, 100%, 50%), #fff)`;
 
-  function remember(c) {                                           // 맨 앞으로 올리고 5개까지만 유지
+  function remember(c) {
     recent = [c, ...recent.filter(x => x !== c)].slice(0, 5);
     historyEl.replaceChildren(...recent.map(c => {
       const d = document.createElement('div');
@@ -421,12 +418,12 @@
       return d;
     }));
   }
-  function pick(e) {                                               // 도넛 영역만 색상으로 인식
+  function pick(e) {
     const r = wheel.getBoundingClientRect();
     const x = e.clientX - r.left - r.width / 2, y = r.top + r.height / 2 - e.clientY;
     const dist = Math.hypot(x, y);
     if (dist <= 35 || dist > r.width / 2) return false;
-    hue = (90 - Math.atan2(y, x) * 180 / Math.PI + 360) % 360;    // CSS 색상환의 각도와 HSL 색상값을 대응
+    hue = (90 - Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
     renderTrack();
     updateColor();
     return true;
@@ -435,7 +432,7 @@
   lightInput.oninput = () => { lightness = +lightInput.value; updateColor(); };
   lightInput.onchange = () => remember(color);
 
-  /* ── 텍스트: 추가 / 크기 / 글꼴 / 선택·이동·회전 / 삭제 ── */
+  /* ── 텍스트 추가 ── */
   $('btnAddText').onclick = () => {
     Object.assign(T, { content: textInput.value || '텍스트를 입력하세요', size: +sizeInput.value, color, shown: true });
     selected = true;
@@ -447,27 +444,27 @@
   textInput.oninput = () => { T.content = textInput.value; renderText(); };
   textInput.onchange = () => saveHistory(false);
   document.querySelectorAll('.font-item').forEach(b => {
-    b.style.fontFamily = FONTS[b.dataset.font];                    // 버튼 글자를 각 글꼴로 미리 보여줌
+    b.style.fontFamily = FONTS[b.dataset.font];
     b.onclick = () => { T.font = b.dataset.font; renderText(); saveHistory(false); };
   });
 
   const textPose = () => `${T.x}|${T.y}|${T.rot}`;
   text.addEventListener('mousedown', e => {
-    if (mode) return;                                              // 그리기·지우개 중에는 글자를 건드리지 않음
+    if (mode) return;
     e.preventDefault();
-    document.activeElement.blur();                                 // 입력칸에 커서가 있어도 Delete 키가 글자 삭제로 동작하게
+    document.activeElement.blur();
     selected = true;
-    drag = e.target === handle ? 'rotate' : 'text';                // 위쪽 회전 휠을 잡으면 회전, 글자를 잡으면 이동
+    drag = e.target === handle ? 'rotate' : 'text';
     const r = wrap.getBoundingClientRect();
     grab = { x: e.clientX - (r.left + T.x / 100 * r.width), y: e.clientY - (r.top + T.y / 100 * r.height), pose: textPose() };
     renderText();
   });
-  document.addEventListener('mousedown', e => {                    // 사진칸 쪽 빈 곳을 누르면 선택 해제 (오른쪽 패널은 유지)
+  document.addEventListener('mousedown', e => {
     if (selected && e.target.closest('.center-panel') && !text.contains(e.target)) { selected = false; renderText(); }
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Delete' || !selected || !T.shown || e.target.closest('input, select, textarea')) return;
-    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });      // 삭제하면 다음에 얹을 글자는 가운데·0°에서 시작
+    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });
     selected = false;
     renderText();
     saveHistory(false);
@@ -480,7 +477,7 @@
     if (drag === 'text') {
       T.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
       T.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
-    } else {                                                       // 글자 중심에서 마우스까지의 각도 (바로 위 = 0°, 360° 전체 회전)
+    } else {
       const a = Math.atan2(e.clientY - (r.top + T.y / 100 * r.height), e.clientX - (r.left + T.x / 100 * r.width));
       T.rot = Math.round((a * 180 / Math.PI + 450) % 360);
     }
@@ -488,8 +485,8 @@
   });
   window.addEventListener('mouseup', () => {
     if (drag === 'hue') remember(color);
-    if (isDrawing) saveHistory(true);                              // 그림은 펜 그림 원본도 갱신
-    else if ((drag === 'text' || drag === 'rotate') && textPose() !== grab.pose) saveHistory(false);   // 클릭만 한 경우는 기록 안 함
+    if (isDrawing) saveHistory(true);
+    else if ((drag === 'text' || drag === 'rotate') && textPose() !== grab.pose) saveHistory(false);
     drag = null;
     isDrawing = false;
   });
@@ -557,18 +554,19 @@
         ctx.arc(x + (Math.random() - .5) * 10, y + (Math.random() - .5) * 10, brushSize / 2, 0, TAU);
         ctx.fill();
       } else if (brushType === 'neon') {
-        // 1. 흰색 코어 선을 먼저 긋기 (끊김 방지)
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = brushSize * 0.6;
-        line(x, y);
-        
-        // 2. 그 위에 파란 네온 빛 덧칠하기
+        // 1. 네온 빛(그림자) 긋기
         ctx.strokeStyle = color;
         ctx.shadowBlur = 15;
         ctx.shadowColor = color;
         ctx.lineWidth = brushSize + 2;
         line(x, y);
-      } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {   // 하트·별: 25px 간격으로 도장 찍기
+        
+        // 2. 그림자 없애고, 그 위에 하얀색 코어 선 덧그리기
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = brushSize * 0.4;
+        line(x, y);
+      } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {
         stampX = x; stampY = y;
         ctx.translate(x, y);
         ctx.rotate(Math.random() * TAU);
@@ -594,14 +592,14 @@
     lastX = x; lastY = y;
   });
 
-  /* ── 완성본 ① 사진칸에 보이는 그대로 (사진 + 그림 + 글자) ── */
+  /* ── 완성본 및 다운로드 ── */
   function capture() {
     if (!baseImage) { alert('먼저 이미지를 불러와주세요!'); return null; }
     const c = Object.assign(document.createElement('canvas'), { width: drawCanvas.width, height: drawCanvas.height });
     const g = c.getContext('2d');
     g.drawImage(bgCanvas, 0, 0);
     g.drawImage(drawCanvas, 0, 0);
-    if (T.shown) {                                                 // 글자: 선택한 글꼴 + 회전 반영 (그림자도 같이 회전)
+    if (T.shown) {
       const a = T.rot * Math.PI / 180;
       g.save();
       g.translate(T.x / 100 * c.width, T.y / 100 * c.height);
@@ -616,7 +614,6 @@
     return c;
   }
 
-  /* ── 완성본 ② 인스타 피드 전체 (헤더 + 정사각형 사진 + 아이콘·문구, 버튼 제외) ── */
   function drawFeed(card) {
     const W = 400, HEAD = 60, PIC = 400;
     const c = Object.assign(document.createElement('canvas'), { width: W, height: HEAD + PIC + 110 });
@@ -626,17 +623,17 @@
     g.textAlign = 'left';
     g.textBaseline = 'middle';
 
-    g.fillStyle = '#f0f0f0';                                       // 헤더
+    g.fillStyle = '#f0f0f0';
     g.beginPath(); g.arc(35, 30, 18, 0, TAU); g.fill();
     g.fillStyle = '#000';
     g.font = '16px Arial'; g.fillText('🦋', 27, 31);
     g.font = 'bold 14px "Pretendard", sans-serif'; g.fillText('ALEPH_Studio', 65, 31);
     g.fillStyle = '#eee'; g.fillRect(0, HEAD - 1, W, 1);
 
-    const m = Math.min(card.width, card.height);                   // 사진: 가운데 기준 정사각형으로 잘라 채움
+    const m = Math.min(card.width, card.height);
     g.drawImage(card, (card.width - m) / 2, (card.height - m) / 2, m, m, 0, HEAD, PIC, PIC);
 
-    const y = HEAD + PIC;                                          // 아이콘 → 캡션 → 태그
+    const y = HEAD + PIC;
     g.fillStyle = '#000'; g.font = '20px Arial';
     ['❤️', '💬', '✈️'].forEach((e, i) => g.fillText(e, 15 + i * 35, y + 25));
     g.font = 'bold 13px "Pretendard", sans-serif'; g.fillText('ALEPH_Studio', 15, y + 60);
@@ -646,7 +643,7 @@
   }
 
   const save = (canvas, name) => Object.assign(document.createElement('a'), { href: canvas.toDataURL('image/png'), download: name }).click();
-  let lastCard = null;                                             // 피드에 올린 짤
+  let lastCard = null;
   $('btnDirectDownload').onclick = () => { const c = capture(); if (c) save(c, 'card_studio_image.png'); };
   $('btnComplete').onclick = () => {
     const c = capture();
@@ -665,4 +662,3 @@
 </script>
 </body>
 </html>
-
