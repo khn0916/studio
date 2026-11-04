@@ -557,13 +557,16 @@
         ctx.arc(x + (Math.random() - .5) * 10, y + (Math.random() - .5) * 10, brushSize / 2, 0, TAU);
         ctx.fill();
       } else if (brushType === 'neon') {
+        // 1. 흰색 코어 선을 먼저 긋기 (끊김 방지)
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = brushSize * 0.6;
+        line(x, y);
+        
+        // 2. 그 위에 파란 네온 빛 덧칠하기
+        ctx.strokeStyle = color;
         ctx.shadowBlur = 15;
         ctx.shadowColor = color;
         ctx.lineWidth = brushSize + 2;
-        line(x, y);
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = brushSize * .4;
         line(x, y);
       } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {   // 하트·별: 25px 간격으로 도장 찍기
         stampX = x; stampY = y;
@@ -662,3 +665,4 @@
 </script>
 </body>
 </html>
+
