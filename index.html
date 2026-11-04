@@ -555,24 +555,19 @@
         ctx.fill();
       } else if (brushType === 'neon') {
         // 1. 네온 빛(그림자) 긋기
+        ctx.globalCompositeOperation = 'source-over'; // 합성 모드 초기화
         ctx.strokeStyle = color;
         ctx.shadowBlur = 15;
         ctx.shadowColor = color;
-        ctx.lineWidth = brushSize + 2;
+        ctx.lineWidth = brushSize + 4; // 파란 선을 조금 더 두껍게
         line(x, y);
         
-        // 2. 그림자 없애고, 그 위에 하얀색 코어 선 덧그리기
+        // 2. 흰색 코어 선 덧그리기
         ctx.shadowBlur = 0;
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = brushSize * 0.4;
+        ctx.lineWidth = brushSize * 0.3; // 흰 선을 아주 얇게
         line(x, y);
-      } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {
-        stampX = x; stampY = y;
-        ctx.translate(x, y);
-        ctx.rotate(Math.random() * TAU);
-        brushType === 'heart' ? heart(brushSize * 3) : star(brushSize * 3, brushSize * 1.5);
       }
-    }
     ctx.restore();
   }
   const mousePos = e => {
@@ -662,3 +657,4 @@
 </script>
 </body>
 </html>
+
