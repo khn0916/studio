@@ -89,6 +89,9 @@
   .tool-btn.primary, .tool-btn.done { text-align: center; }
   .tool-btn.done { background: #333; color: #fff; border-color: #333; }
   .tool-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .tool-btn.danger { color: #d32f2f; }
+  .text-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+  .text-actions .tool-btn { flex: 1; width: auto; margin-bottom: 0; text-align: center; }
   .brush-label { margin-bottom: 5px; font-size: .85rem; color: #666; }
   .brush-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
   .font-grid { grid-template-columns: repeat(4, 1fr); margin-bottom: 0; }
@@ -227,7 +230,10 @@
             </div>
           </div>
           <button class="tool-btn primary" id="btnAddText">텍스트 추가</button>
-          <button class="tool-btn done" id="btnDoneText" disabled>완료</button>
+          <div class="text-actions">
+            <button class="tool-btn danger" id="btnDeleteText" disabled>삭제</button>
+            <button class="tool-btn done" id="btnDoneText" disabled>완료</button>
+          </div>
         </div>
       </div>
     </div>
@@ -257,7 +263,7 @@
      'fileInput', 'colorWheel', 'lightnessInput', 'textInput', 'modal', 'instaResultImg', 'ratioSelect', 'btnDeleteImg',
      'btnUndo', 'btnRedo', 'brushSizeInput', 'eraserSizeInput'].map($);
   const bgCtx = bgCanvas.getContext('2d'), ctx = drawCanvas.getContext('2d');
-  const btnAddText = $('btnAddText'), btnDoneText = $('btnDoneText');
+  const btnAddText = $('btnAddText'), btnDoneText = $('btnDoneText'), btnDeleteText = $('btnDeleteText');
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const TAU = Math.PI * 2;
   const MAX_WIDTH = { '1/1': 600, '4/5': 480, '9/16': 340 };      // 비율별 사진칸 최대 가로(px)
@@ -293,7 +299,7 @@
     text.classList.toggle('selected', selected && T.shown);
     document.querySelectorAll('.font-item').forEach(b => b.classList.toggle('active', b.dataset.font === T.font));
     btnAddText.disabled = T.shown;                                 // 글자를 쓰는 중에는 '완료' 만, 끝나면 '텍스트 추가' 만 누를 수 있음
-    btnDoneText.disabled = !T.shown;
+    btnDoneText.disabled = btnDeleteText.disabled = !T.shown;
   }
 
   /* ── 캔버스 / 실행 취소·다시 실행 ── */
@@ -484,12 +490,16 @@
   document.addEventListener('mousedown', e => {                    // 사진칸 쪽 빈 곳을 누르면 선택 해제 (오른쪽 패널은 유지)
     if (selected && e.target.closest('.center-panel') && !text.contains(e.target)) { selected = false; renderText(); }
   });
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Delete' || !selected || !T.shown || e.target.closest('input, select, textarea')) return;
-    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });      // 삭제하면 다음에 얹을 글자는 가운데·0°에서 시작
+  function deleteText() {                                          // 삭제 버튼 · Delete 키 공용: 쓰는 중인 글자를 지움
+    if (!T.shown) return;
+    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });      // 다음에 추가할 글자는 가운데·0°에서 시작
     selected = false;
     renderText();
     saveHistory(false);
+  }
+  btnDeleteText.onclick = deleteText;
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Delete' && selected && !e.target.closest('input, select, textarea')) deleteText();
   });
 
   window.addEventListener('mousemove', e => {
