@@ -19,7 +19,7 @@
   .btn-complete { background: var(--sky); color: var(--sky-ink); border: none; }
   .btn-complete:hover { filter: brightness(1.1); }
 
-  /* 메인 레이아웃 */
+  /* 중앙: 툴바 · 캔버스 · 되돌리기 */
   .main-container { display: flex; flex: 1; overflow: hidden; }
   .center-panel { flex: 1; padding: 20px; background: #e9ecef; flex-direction: column; }
   .canvas-toolbar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 600px; margin-bottom: 10px; }
@@ -31,8 +31,7 @@
   .ratio-select { padding: 8px; }
   #btnDeleteImg { color: #d32f2f; }
 
-  /* 캔버스 */
-  .canvas-wrapper { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; background: #fff; border: 2px dashed #b0b0b0; border-radius: 12px; overflow: hidden; transition: .3s; box-shadow: 0 4px 12px rgba(0,0,0,.05); touch-action: none; }
+  .canvas-wrapper { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; background: #fff; border: 2px dashed #b0b0b0; border-radius: 12px; overflow: hidden; transition: .3s; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
   .canvas-wrapper.drag-over { border-color: var(--accent); background: rgba(225,0,42,.05); }
   .upload-label { position: absolute; inset: 0; cursor: pointer; z-index: 5; }
   .upload-guide { text-align: center; color: #999; pointer-events: none; }
@@ -42,8 +41,7 @@
   #drawCanvas { z-index: 2; cursor: default; }
   .canvas-wrapper.drawing #drawCanvas { cursor: crosshair; }
 
-  /* 텍스트 레이어 (긴 글/줄바꿈/이모지 대응) */
-  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: pre-wrap; word-break: break-all; cursor: move; user-select: none; pointer-events: auto; text-align: center; }
+  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; pointer-events: auto; }
   .text-layer.selected { outline: 2px dashed #333; }
   .canvas-wrapper.drawing .text-layer { pointer-events: none; }
   .resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--sky); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
@@ -55,16 +53,6 @@
   .rotate-handle { display: none; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; justify-content: center; align-items: center; background: #fff; border: 2px solid var(--sky); border-radius: 50%; color: var(--sky); font-size: 14px; line-height: 1; text-shadow: none; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: grab; }
   .rotate-handle::after { content: ''; position: absolute; top: 100%; left: 50%; width: 2px; height: 10px; margin-left: -1px; background: var(--sky); }
   .text-layer.selected .rotate-handle { display: flex; }
-
-  /* 이모지 레이어 */
-  .emoji-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; font-size: 50px; cursor: move; user-select: none; pointer-events: auto; text-align: center; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5)); }
-  .emoji-layer.selected { outline: 2px dashed #333; }
-  .canvas-wrapper.drawing .emoji-layer { pointer-events: none; }
-  
-  /* 이모지 크기 조절 핸들 */
-  .emoji-resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--accent); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
-  .emoji-layer.selected .emoji-resize-handle { display: block; }
-  .emoji-resize-handle[data-corner="se"] { bottom: -7px; right: -7px; cursor: nwse-resize; }
 
   .canvas-bottom-bar { display: flex; gap: 8px; margin-top: 15px; width: 100%; max-width: 600px; }
   .history-btn { padding: 8px 15px; display: flex; align-items: center; justify-content: center; background: #fff; border: 2px solid var(--sky); border-radius: 6px; font-size: 1.1rem; font-weight: bold; color: var(--sky); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.1); transition: .2s; }
@@ -86,7 +74,7 @@
   .history-palette div { aspect-ratio: 1; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: transform .1s; }
   .history-palette div:hover { transform: scale(1.1); }
 
-  /* 아코디언 */
+  /* 아코디언 도구 */
   .accordion { border-bottom: 1px solid var(--border-color); }
   .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; color: #333; font-weight: bold; cursor: pointer; user-select: none; }
   .accordion-header:hover { background: #f0f0f0; }
@@ -122,7 +110,7 @@
   .input-group input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; }
   .input-group input[type="range"] { width: 100%; }
 
-  /* 모달 */
+  /* 인스타 피드 모달 */
   .modal-overlay { position: fixed; inset: 0; display: none; z-index: 1000; background: rgba(0,0,0,.6); backdrop-filter: blur(3px); }
   .insta-modal { width: 400px; display: flex; flex-direction: column; background: #fff; color: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: slideUp .3s ease-out; }
   @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -182,10 +170,8 @@
           <div class="resize-handle" data-corner="sw"></div><div class="resize-handle" data-corner="se"></div>
         </div>
 
-        <div class="emoji-layer" id="emojiLayer">
-          <span id="emojiBody"></span>
-          <div class="emoji-resize-handle" data-corner="se"></div>
-        </div>
+        <!-- 이모지 레이어들 -->
+        <div id="emojiContainer" style="position: absolute; inset: 0; pointer-events: none; z-index: 9;"></div>
       </div>
 
       <div class="canvas-bottom-bar">
@@ -282,10 +268,13 @@
     ['canvasWrapper', 'bgCanvas', 'drawCanvas', 'uploadLabel', 'textLayer', 'textBody', 'rotateHandle', 'currentColor', 'historyPalette',
      'fileInput', 'colorWheel', 'lightnessInput', 'textInput', 'modal', 'instaResultImg', 'ratioSelect', 'btnDeleteImg',
      'btnUndo', 'btnRedo', 'brushSizeInput', 'eraserSizeInput'].map($);
-  
-  const emojiLayer = $('emojiLayer'), emojiBody = $('emojiBody'), emojiGrid = $('emojiGrid');
   const bgCtx = bgCanvas.getContext('2d'), ctx = drawCanvas.getContext('2d');
   const btnAddText = $('btnAddText'), btnDoneText = $('btnDoneText'), btnDeleteText = $('btnDeleteText');
+  
+  // 이모지 추가 변수
+  const emojiGrid = $('emojiGrid'), emojiContainer = $('emojiContainer');
+  let emojis = []; // 이모지 상태 배열
+  let selectedEmojiId = null;
   
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const TAU = Math.PI * 2;
@@ -298,16 +287,12 @@
     gungsuh: "'Gungsuh', '궁서', 'GungsuhChe', 'Noto Serif KR', serif",
   };
 
-  // 이모지 리스트
   const EMOJIS = ['🥰','✨','🌸','🤑','💀','👻','👽','😸','🐕','🐳','🍓','🍋','🍎','🍭','🍫','💚'];
   
   let hue = 0, lightness = 50, color;
   let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];
-  let drag = null, grab = null, selected = false, emojiSelected = false;
-  
-  // 상태 관리
+  let drag = null, grab = null, selected = false;
   const T = { shown: false, content: '텍스트를 입력하세요', size: 40, color: null, x: 50, y: 50, rot: 0, font: 'gothic' };
-  const E = { shown: false, content: '', size: 50, x: 50, y: 50 }; // 이모지 상태
 
   let mode = null, brushType = 'pen', brushSize = 4, eraserSize = 20;
   let isDrawing = false, lastX = 0, lastY = 0, stampX = 0, stampY = 0;
@@ -317,37 +302,115 @@
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
-  /* ── 이모지 그리드 초기화 ── */
+  /* ── 이모지 초기화 ── */
   EMOJIS.forEach(emoji => {
     const div = document.createElement('div');
     div.className = 'emoji-item';
     div.textContent = emoji;
-    div.onclick = () => {
-      E.content = emoji;
-      E.shown = true;
-      E.x = 50; E.y = 50; E.size = 50; // 중앙에 생성
-      emojiSelected = true;
-      selected = false; // 텍스트 선택 해제
-      renderText(); renderEmoji();
-      saveHistory(false);
-    };
+    div.onclick = () => addEmoji(emoji);
     emojiGrid.appendChild(div);
   });
 
-  /* ── 이모지 렌더링 ── */
-  function renderEmoji(w = wrap.clientWidth) {
-    emojiBody.textContent = E.content;
-    Object.assign(emojiLayer.style, {
-      display: E.shown ? 'block' : 'none',
-      left: E.x + '%',
-      top: E.y + '%',
-      fontSize: E.size * w / 600 + 'px',
-      transform: `translate(-50%, -50%)` // 회전 없음
-    });
-    emojiLayer.classList.toggle('selected', emojiSelected && E.shown);
+  function addEmoji(char) {
+    const id = Date.now();
+    emojis.push({ id, char, x: 50, y: 50, size: 50, rot: 0 });
+    selectedEmojiId = id;
+    selected = false;
+    renderEmojis();
+    saveHistory(false);
   }
 
-  /* ── 텍스트 렌더링 ── */
+  function renderEmojis(w = wrap.clientWidth) {
+    emojiContainer.innerHTML = ''; // 초기화
+    emojis.forEach(e => {
+      const el = document.createElement('div');
+      el.className = 'emoji-layer';
+      el.dataset.id = e.id;
+      el.textContent = e.char;
+      Object.assign(el.style, {
+        display: 'block',
+        left: e.x + '%',
+        top: e.y + '%',
+        fontSize: e.size * w / 600 + 'px',
+        transform: `translate(-50%, -50%) rotate(${e.rot}deg)`,
+        position: 'absolute',
+        pointerEvents: 'auto',
+        cursor: 'move',
+        userSelect: 'none',
+        filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))'
+      });
+      if (e.id === selectedEmojiId) el.classList.add('selected');
+
+      // 선택 핸들
+      if (e.id === selectedEmojiId) {
+        // 회전 핸들
+        const rot = document.createElement('div');
+        rot.className = 'rotate-handle';
+        rot.style.display = 'flex';
+        rot.innerHTML = '↻';
+        rot.style.top = '-34px'; rot.style.left = '50%'; rot.style.transform = 'translateX(-50%)';
+        rot.style.position = 'absolute'; rot.style.width = '22px'; rot.style.height = '22px';
+        rot.style.background = '#fff'; rot.style.border = '2px solid var(--sky)';
+        rot.style.borderRadius = '50%'; rot.style.color = 'var(--sky)';
+        rot.style.cursor = 'grab'; rot.style.boxShadow = '0 1px 4px rgba(0,0,0,.3)';
+        rot.style.fontSize = '14px'; rot.style.textAlign = 'center'; rot.style.lineHeight = '20px';
+        rot.style.pointerEvents = 'auto';
+        rot.dataset.action = 'rotate';
+        el.appendChild(rot);
+
+        // 크기 조절 핸들
+        const res = document.createElement('div');
+        res.className = 'resize-handle';
+        res.style.display = 'block';
+        res.style.bottom = '-7px'; res.style.right = '-7px';
+        res.style.position = 'absolute'; res.style.width = '12px'; res.style.height = '12px';
+        res.style.background = '#fff'; res.style.border = '2px solid var(--sky)';
+        res.style.cursor = 'nwse-resize'; res.style.boxShadow = '0 1px 3px rgba(0,0,0,.3)';
+        res.style.pointerEvents = 'auto';
+        res.dataset.action = 'resize';
+        el.appendChild(res);
+      }
+
+      emojiContainer.appendChild(el);
+    });
+  }
+
+  // 이모지 조작 이벤트
+  emojiContainer.addEventListener('mousedown', e => {
+    if (mode) return;
+    const layer = e.target.closest('.emoji-layer');
+    if (!layer) return;
+
+    e.preventDefault();
+    document.activeElement.blur();
+    
+    const id = Number(layer.dataset.id);
+    selectedEmojiId = id;
+    selected = false;
+    renderText();
+    renderEmojis();
+
+    const emoji = emojis.find(x => x.id === id);
+    const r = wrap.getBoundingClientRect(), cx = r.left + emoji.x / 100 * r.width, cy = r.top + emoji.y / 100 * r.height;
+    
+    let action = 'move';
+    if (e.target.dataset.action === 'rotate') action = 'rotate';
+    if (e.target.dataset.action === 'resize') action = 'resize';
+
+    drag = 'emoji';
+    grab = { 
+      id,
+      action,
+      x: e.clientX - cx, 
+      y: e.clientY - cy, 
+      dist: Math.hypot(e.clientX - cx, e.clientY - cy), 
+      startSize: emoji.size, 
+      startRot: emoji.rot,
+      pose: `${emoji.x}|${emoji.y}|${emoji.size}|${emoji.rot}`
+    };
+  });
+
+  /* ── 텍스트: 상태(T) → 화면 ── */
   function renderText(w = wrap.clientWidth) {
     textBody.textContent = T.content;
     Object.assign(text.style, {
@@ -376,8 +439,8 @@
     canvasHistory.push({ 
       drawData: drawCanvas.toDataURL('image/png'), 
       width: drawCanvas.width, height: drawCanvas.height, ratio: ratioSelect.value, 
-      text: { ...T }, 
-      emoji: { ...E } 
+      text: { ...T },
+      emojis: JSON.parse(JSON.stringify(emojis)) // 이모지 배열 저장
     });
     if (canvasHistory.length > MAX_HISTORY) canvasHistory.shift();
     historyStep = canvasHistory.length - 1;
@@ -400,9 +463,10 @@
     textInput.value = T.content;
     renderText(s.width);
 
-    if (s.emoji) {
-      Object.assign(E, s.emoji);
-      renderEmoji(s.width);
+    if (s.emojis) {
+      emojis = s.emojis;
+      selectedEmojiId = null;
+      renderEmojis(s.width);
     }
 
     const im = new Image();
@@ -434,7 +498,7 @@
     saveHistory(true);
   }
 
-  /* ── 사진 불러오기 ── */
+  /* ── 사진 불러오기 / 삭제 / 비율 ── */
   function showPhoto(on) {
     label.style.display = on ? 'none' : 'flex';
     btnDelete.hidden = !on;
@@ -471,7 +535,7 @@
     renderBackground();
     ctx.drawImage(src, ...fitBox(src.width, src.height, drawCanvas.width, drawCanvas.height));
     renderText(w);
-    renderEmoji(w);
+    renderEmojis(w);
     saveHistory(false);
   };
 
@@ -528,9 +592,9 @@
   btnAddText.onclick = () => {
     Object.assign(T, { content: textInput.value || '텍스트를 입력하세요', size: 40, x: 50, y: 50, rot: 0, color, shown: true });
     selected = true;
-    emojiSelected = false;
+    selectedEmojiId = null;
     renderText();
-    renderEmoji();
+    renderEmojis();
     saveHistory(false);
   };
   btnDoneText.onclick = () => {
@@ -550,42 +614,25 @@
   const TEXT_DRAGS = ['text', 'rotate', 'resize'];
   const textPose = () => `${T.x}|${T.y}|${T.rot}|${T.size}`;
   text.addEventListener('mousedown', e => {
-    if (mode) return; // 그리기 모드 중 무시
+    if (mode) return;
     e.preventDefault();
     document.activeElement.blur();
     selected = true;
-    emojiSelected = false;
+    selectedEmojiId = null;
     drag = e.target === handle ? 'rotate' : e.target.dataset.corner ? 'resize' : 'text';
     const r = wrap.getBoundingClientRect(), cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
     grab = { x: e.clientX - cx, y: e.clientY - cy, dist: Math.hypot(e.clientX - cx, e.clientY - cy), size: T.size, pose: textPose() };
     renderText();
-    renderEmoji();
-  });
-
-  /* ── 이모지 조작 이벤트 ── */
-  emojiLayer.addEventListener('mousedown', e => {
-    if (mode) return; // 그리기 모드 중 무시
-    e.preventDefault();
-    document.activeElement.blur();
-    emojiSelected = true;
-    selected = false;
-    drag = e.target.dataset.corner ? 'emoji-resize' : 'emoji';
-    
-    const r = wrap.getBoundingClientRect(), cx = r.left + E.x / 100 * r.width, cy = r.top + E.y / 100 * r.height;
-    grab = { 
-      x: e.clientX - cx, 
-      y: e.clientY - cy, 
-      dist: Math.hypot(e.clientX - cx, e.clientY - cy), 
-      size: E.size, 
-      pose: `${E.x}|${E.y}|${E.size}` 
-    };
-    renderText();
-    renderEmoji();
+    renderEmojis();
   });
 
   document.addEventListener('mousedown', e => {
-    if (selected && e.target.closest('.center-panel') && !text.contains(e.target)) { selected = false; renderText(); }
-    if (emojiSelected && e.target.closest('.center-panel') && !emojiLayer.contains(e.target)) { emojiSelected = false; renderEmoji(); }
+    if (selected && e.target.closest('.center-panel') && !text.contains(e.target) && !e.target.closest('.emoji-layer')) { 
+      selected = false; renderText(); 
+    }
+    if (selectedEmojiId && e.target.closest('.center-panel') && !e.target.closest('.emoji-layer')) {
+      selectedEmojiId = null; renderEmojis();
+    }
   });
 
   function deleteText() {
@@ -599,8 +646,10 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Delete' && !e.target.closest('input, select, textarea')) {
       if (selected) deleteText();
-      if (emojiSelected && E.shown) {
-        E.shown = false; emojiSelected = false; renderEmoji(); saveHistory(false);
+      if (selectedEmojiId) {
+        emojis = emojis.filter(x => x.id !== selectedEmojiId);
+        selectedEmojiId = null;
+        renderEmojis(); saveHistory(false);
       }
     }
   });
@@ -609,28 +658,35 @@
     if (drag === 'hue') return pick(e);
     
     const r = wrap.getBoundingClientRect();
-    const cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
-    const ecx = r.left + E.x / 100 * r.width, ecy = r.top + E.y / 100 * r.height;
-
-    if (drag === 'text') {
-      T.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
-      T.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
-      renderText();
-    } else if (drag === 'rotate') {
-      T.rot = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 450) % 360);
-      renderText();
-    } else if (drag === 'resize') {
-      T.size = clamp(Math.round(grab.size * Math.hypot(e.clientX - cx, e.clientY - cy) / grab.dist), 10, 300);
-      renderText();
+    
+    if (drag === 'text' || drag === 'rotate' || drag === 'resize') {
+      const cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
+      if (drag === 'text') {
+        T.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
+        T.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
+        renderText();
+      } else if (drag === 'rotate') {
+        T.rot = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 450) % 360);
+        renderText();
+      } else if (drag === 'resize') {
+        T.size = clamp(Math.round(grab.size * Math.hypot(e.clientX - cx, e.clientY - cy) / grab.dist), 10, 300);
+        renderText();
+      }
     } 
     else if (drag === 'emoji') {
-      E.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
-      E.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
-      renderEmoji();
-    } 
-    else if (drag === 'emoji-resize') {
-      E.size = clamp(Math.round(grab.size * Math.hypot(e.clientX - ecx, e.clientY - ecy) / grab.dist), 20, 300);
-      renderEmoji();
+      const emoji = emojis.find(x => x.id === grab.id);
+      if (!emoji) return;
+      const cx = r.left + emoji.x / 100 * r.width, cy = r.top + emoji.y / 100 * r.height;
+      
+      if (grab.action === 'move') {
+        emoji.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
+        emoji.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
+      } else if (grab.action === 'rotate') {
+        emoji.rot = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 450) % 360);
+      } else if (grab.action === 'resize') {
+        emoji.size = clamp(Math.round(grab.startSize * Math.hypot(e.clientX - cx, e.clientY - cy) / grab.dist), 20, 300);
+      }
+      renderEmojis();
     }
   });
 
@@ -638,8 +694,10 @@
     if (drag === 'hue') remember(color);
     if (isDrawing) saveHistory(true);
     else if (TEXT_DRAGS.includes(drag) && textPose() !== grab.pose) saveHistory(false);
-    else if (drag === 'emoji' && `${E.x}|${E.y}|${E.size}` !== grab.pose) saveHistory(false);
-    else if (drag === 'emoji-resize' && `${E.x}|${E.y}|${E.size}` !== grab.pose) saveHistory(false);
+    else if (drag === 'emoji') {
+      const emoji = emojis.find(x => x.id === grab.id);
+      if (emoji && `${emoji.x}|${emoji.y}|${emoji.size}|${emoji.rot}` !== grab.pose) saveHistory(false);
+    }
     drag = null;
     isDrawing = false;
   });
@@ -653,6 +711,7 @@
       $(id).classList.toggle('active', mode === k);
     }
     wrap.classList.toggle('drawing', !!mode);
+    if (mode) { selected = false; selectedEmojiId = null; renderText(); renderEmojis(); }
   }
   $('btnDrawMode').onclick = () => setMode('draw');
   $('btnEraserMode').onclick = () => setMode('erase');
@@ -754,17 +813,17 @@
     g.restore();
   }
 
-  function drawEmoji(g, W, H) {
-    if (!E.shown) return;
-    g.save();
-    g.translate(E.x / 100 * W, E.y / 100 * H);
-    g.font = `${E.size * W / 600}px serif`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    // 이모지 자체의 그림자 효과 (선택사항)
-    // g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 4; g.shadowOffsetX = 2; g.shadowOffsetY = 2;
-    g.fillText(E.content, 0, 0);
-    g.restore();
+  function drawEmojis(g, W, H) {
+    emojis.forEach(e => {
+      g.save();
+      g.translate(e.x / 100 * W, e.y / 100 * H);
+      g.rotate(e.rot * Math.PI / 180);
+      g.font = `${e.size * W / 600}px serif`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(e.char, 0, 0);
+      g.restore();
+    });
   }
 
   function capture() {
@@ -774,7 +833,7 @@
     g.drawImage(bgCanvas, 0, 0);
     g.drawImage(drawCanvas, 0, 0);
     if (T.shown) drawText(g, c.width, c.height);
-    if (E.shown) drawEmoji(g, c.width, c.height);
+    drawEmojis(g, c.width, c.height); // 이모지 포함
     return c;
   }
 
@@ -823,9 +882,7 @@
   remember('#FFFFFF');
   renderTrack();
   updateColor();
-  
-  // 이모지 초기 상태 렌더링
-  renderEmoji();
+  renderEmojis(); // 초기 이모지 렌더링
 </script>
 </body>
 </html>
