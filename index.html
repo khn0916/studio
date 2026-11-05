@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>짤·카드 스튜디오 - Studio UI</title>
 <style>
-  :root { --bg-light: #f0f2f5; --panel-bg: #fff; --text-dark: #333; --border-color: #e0e0e0; --accent: #E1002A; }
+  :root { --bg-light: #f0f2f5; --panel-bg: #fff; --text-dark: #333; --border-color: #e0e0e0; --accent: #E1002A; --sky: #87CEEB; --sky-ink: #0b3954; }
   body { margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-light); color: var(--text-dark); font-family: 'Pretendard', sans-serif; }
   .center-panel, .canvas-wrapper, .upload-label, .insta-profile, .insta-main, .modal-overlay.show { display: flex; justify-content: center; align-items: center; }
 
@@ -16,7 +16,7 @@
   .btn-outline, .btn-complete { padding: 8px 20px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: .2s; }
   .btn-outline { background: #fff; color: #333; border: 1px solid #ccc; }
   .btn-outline:hover { background: #f0f0f0; }
-  .btn-complete { background: var(--accent); color: #fff; border: none; }
+  .btn-complete { background: var(--sky); color: var(--sky-ink); border: none; }
   .btn-complete:hover { filter: brightness(1.1); }
 
   /* 중앙: 툴바 · 캔버스 · 되돌리기 */
@@ -44,20 +44,20 @@
   .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; pointer-events: auto; }
   .text-layer.selected { outline: 2px dashed #333; }
   .canvas-wrapper.drawing .text-layer { pointer-events: none; }   /* 그리기·지우개 중에는 글자칸 아래로도 펜이 닿게 */
-  .resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--accent); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--sky); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   .text-layer.selected .resize-handle { display: block; }
   .resize-handle[data-corner="nw"] { top: -7px; left: -7px; cursor: nwse-resize; }
   .resize-handle[data-corner="ne"] { top: -7px; right: -7px; cursor: nesw-resize; }
   .resize-handle[data-corner="sw"] { bottom: -7px; left: -7px; cursor: nesw-resize; }
   .resize-handle[data-corner="se"] { bottom: -7px; right: -7px; cursor: nwse-resize; }
-  .rotate-handle { display: none; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; justify-content: center; align-items: center; background: #fff; border: 2px solid var(--accent); border-radius: 50%; color: var(--accent); font-size: 14px; line-height: 1; text-shadow: none; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: grab; }
-  .rotate-handle::after { content: ''; position: absolute; top: 100%; left: 50%; width: 2px; height: 10px; margin-left: -1px; background: var(--accent); }
+  .rotate-handle { display: none; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; justify-content: center; align-items: center; background: #fff; border: 2px solid var(--sky); border-radius: 50%; color: var(--sky); font-size: 14px; line-height: 1; text-shadow: none; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: grab; }
+  .rotate-handle::after { content: ''; position: absolute; top: 100%; left: 50%; width: 2px; height: 10px; margin-left: -1px; background: var(--sky); }
   .text-layer.selected .rotate-handle { display: flex; }
 
   .canvas-bottom-bar { display: flex; gap: 8px; margin-top: 15px; width: 100%; max-width: 600px; }
-  .history-btn { padding: 8px 15px; display: flex; align-items: center; justify-content: center; background: #fff; border: 2px solid var(--accent); border-radius: 6px; font-size: 1.1rem; font-weight: bold; color: var(--accent); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.1); transition: .2s; }
+  .history-btn { padding: 8px 15px; display: flex; align-items: center; justify-content: center; background: #fff; border: 2px solid var(--sky); border-radius: 6px; font-size: 1.1rem; font-weight: bold; color: var(--sky); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.1); transition: .2s; }
   .history-btn:disabled { opacity: .5; cursor: not-allowed; border-color: #ccc; color: #ccc; box-shadow: none; }
-  .history-btn:hover:not(:disabled) { background: #fff0f2; transform: translateY(-2px); }
+  .history-btn:hover:not(:disabled) { background: #eef8fe; transform: translateY(-2px); }
 
   /* 오른쪽 패널 */
   .right-panel { width: 280px; display: flex; flex-direction: column; overflow-y: auto; background: var(--panel-bg); border-left: 1px solid var(--border-color); }
@@ -84,7 +84,8 @@
   .accordion.open .accordion-content { max-height: 500px; padding: 15px; overflow-y: auto; }
   .tool-btn { width: 100%; padding: 10px; margin-bottom: 10px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 6px; text-align: left; cursor: pointer; transition: .2s; }
   .tool-btn:hover { background: #e0e0e0; }
-  .tool-btn.active, .tool-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tool-btn.primary { background: var(--sky); color: var(--sky-ink); border-color: var(--sky); }
   .tool-btn.primary, .tool-btn.done { text-align: center; }
   .tool-btn.done { background: #333; color: #fff; border-color: #333; }
   .tool-btn:disabled { opacity: .45; cursor: not-allowed; }
