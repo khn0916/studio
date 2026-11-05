@@ -19,7 +19,7 @@
   .btn-complete { background: var(--sky); color: var(--sky-ink); border: none; }
   .btn-complete:hover { filter: brightness(1.1); }
 
-  /* 중앙: 툴바 · 캔버스 · 되돌리기 */
+  /* 메인 레이아웃 */
   .main-container { display: flex; flex: 1; overflow: hidden; }
   .center-panel { flex: 1; padding: 20px; background: #e9ecef; flex-direction: column; }
   .canvas-toolbar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 600px; margin-bottom: 10px; }
@@ -31,7 +31,8 @@
   .ratio-select { padding: 8px; }
   #btnDeleteImg { color: #d32f2f; }
 
-  .canvas-wrapper { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; background: #fff; border: 2px dashed #b0b0b0; border-radius: 12px; overflow: hidden; transition: .3s; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+  /* 캔버스 */
+  .canvas-wrapper { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; background: #fff; border: 2px dashed #b0b0b0; border-radius: 12px; overflow: hidden; transition: .3s; box-shadow: 0 4px 12px rgba(0,0,0,.05); touch-action: none; }
   .canvas-wrapper.drag-over { border-color: var(--accent); background: rgba(225,0,42,.05); }
   .upload-label { position: absolute; inset: 0; cursor: pointer; z-index: 5; }
   .upload-guide { text-align: center; color: #999; pointer-events: none; }
@@ -41,9 +42,10 @@
   #drawCanvas { z-index: 2; cursor: default; }
   .canvas-wrapper.drawing #drawCanvas { cursor: crosshair; }
 
-  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: nowrap; cursor: move; user-select: none; pointer-events: auto; }
+  /* 텍스트 레이어 (긴 글/줄바꿈/이모지 대응) */
+  .text-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; color: #fff; font-size: 40px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,.8); white-space: pre-wrap; word-break: break-all; cursor: move; user-select: none; pointer-events: auto; text-align: center; }
   .text-layer.selected { outline: 2px dashed #333; }
-  .canvas-wrapper.drawing .text-layer { pointer-events: none; }   /* 그리기·지우개 중에는 글자칸 아래로도 펜이 닿게 */
+  .canvas-wrapper.drawing .text-layer { pointer-events: none; }
   .resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--sky); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   .text-layer.selected .resize-handle { display: block; }
   .resize-handle[data-corner="nw"] { top: -7px; left: -7px; cursor: nwse-resize; }
@@ -53,6 +55,16 @@
   .rotate-handle { display: none; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; justify-content: center; align-items: center; background: #fff; border: 2px solid var(--sky); border-radius: 50%; color: var(--sky); font-size: 14px; line-height: 1; text-shadow: none; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: grab; }
   .rotate-handle::after { content: ''; position: absolute; top: 100%; left: 50%; width: 2px; height: 10px; margin-left: -1px; background: var(--sky); }
   .text-layer.selected .rotate-handle { display: flex; }
+
+  /* 이모지 레이어 */
+  .emoji-layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; padding: 5px; z-index: 10; font-size: 50px; cursor: move; user-select: none; pointer-events: auto; text-align: center; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5)); }
+  .emoji-layer.selected { outline: 2px dashed #333; }
+  .canvas-wrapper.drawing .emoji-layer { pointer-events: none; }
+  
+  /* 이모지 크기 조절 핸들 */
+  .emoji-resize-handle { display: none; position: absolute; width: 12px; height: 12px; box-sizing: border-box; background: #fff; border: 2px solid var(--accent); border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .emoji-layer.selected .emoji-resize-handle { display: block; }
+  .emoji-resize-handle[data-corner="se"] { bottom: -7px; right: -7px; cursor: nwse-resize; }
 
   .canvas-bottom-bar { display: flex; gap: 8px; margin-top: 15px; width: 100%; max-width: 600px; }
   .history-btn { padding: 8px 15px; display: flex; align-items: center; justify-content: center; background: #fff; border: 2px solid var(--sky); border-radius: 6px; font-size: 1.1rem; font-weight: bold; color: var(--sky); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.1); transition: .2s; }
@@ -74,7 +86,7 @@
   .history-palette div { aspect-ratio: 1; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; transition: transform .1s; }
   .history-palette div:hover { transform: scale(1.1); }
 
-  /* 아코디언 도구 */
+  /* 아코디언 */
   .accordion { border-bottom: 1px solid var(--border-color); }
   .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; color: #333; font-weight: bold; cursor: pointer; user-select: none; }
   .accordion-header:hover { background: #f0f0f0; }
@@ -99,14 +111,18 @@
   .brush-item.active { background: #333; color: #fff; border-color: #333; }
   .brush-size-control { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: .85rem; color: #555; }
   .brush-size-control input { flex: 1; }
-  .emoji-row { display: flex; gap: 10px; flex-wrap: wrap; font-size: 1.5rem; }
-  .emoji-row span { cursor: pointer; }
+  
+  /* 이모지 그리드 */
+  .emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px; }
+  .emoji-item { font-size: 1.5rem; text-align: center; cursor: pointer; padding: 5px; border-radius: 6px; transition: background 0.2s; user-select: none; }
+  .emoji-item:hover { background: #e0e0e0; }
+
   .input-group { margin-bottom: 15px; }
   .input-group label { display: block; margin-bottom: 5px; font-size: .9rem; color: #666; }
   .input-group input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 4px; }
   .input-group input[type="range"] { width: 100%; }
 
-  /* 인스타 피드 모달 */
+  /* 모달 */
   .modal-overlay { position: fixed; inset: 0; display: none; z-index: 1000; background: rgba(0,0,0,.6); backdrop-filter: blur(3px); }
   .insta-modal { width: 400px; display: flex; flex-direction: column; background: #fff; color: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: slideUp .3s ease-out; }
   @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -158,11 +174,17 @@
         <input type="file" id="fileInput" accept="image/png, image/jpeg" hidden>
         <canvas id="bgCanvas" width="600" height="600"></canvas>
         <canvas id="drawCanvas" width="600" height="600"></canvas>
+        
         <div class="text-layer" id="textLayer">
           <span id="textBody">텍스트를 입력하세요</span>
           <div class="rotate-handle" id="rotateHandle" title="드래그해서 회전">↻</div>
           <div class="resize-handle" data-corner="nw"></div><div class="resize-handle" data-corner="ne"></div>
           <div class="resize-handle" data-corner="sw"></div><div class="resize-handle" data-corner="se"></div>
+        </div>
+
+        <div class="emoji-layer" id="emojiLayer">
+          <span id="emojiBody"></span>
+          <div class="emoji-resize-handle" data-corner="se"></div>
         </div>
       </div>
 
@@ -206,12 +228,11 @@
         </div>
       </div>
 
-      <div class="accordion">
+      <div class="accordion" id="accEmoji">
         <div class="accordion-header"><span>😊 이모지</span><span class="arrow">▼</span></div>
         <div class="accordion-content">
-          <div class="emoji-row">
-            <span data-soon="이모지 기능 준비 중!">😈</span><span data-soon="이모지 기능 준비 중!">🤺</span>
-            <span data-soon="이모지 기능 준비 중!">🔥</span><span data-soon="이모지 기능 준비 중!">💖</span>
+          <div class="emoji-grid" id="emojiGrid">
+            <!-- 자바스크립트로 이모지 삽입 -->
           </div>
         </div>
       </div>
@@ -239,7 +260,6 @@
     </div>
   </div>
 
-  <!-- 인스타 피드 모달 -->
   <div class="modal-overlay" id="modal">
     <button class="close-modal" id="btnCloseModal">×</button>
     <div class="insta-modal">
@@ -262,26 +282,34 @@
     ['canvasWrapper', 'bgCanvas', 'drawCanvas', 'uploadLabel', 'textLayer', 'textBody', 'rotateHandle', 'currentColor', 'historyPalette',
      'fileInput', 'colorWheel', 'lightnessInput', 'textInput', 'modal', 'instaResultImg', 'ratioSelect', 'btnDeleteImg',
      'btnUndo', 'btnRedo', 'brushSizeInput', 'eraserSizeInput'].map($);
+  
+  const emojiLayer = $('emojiLayer'), emojiBody = $('emojiBody'), emojiGrid = $('emojiGrid');
   const bgCtx = bgCanvas.getContext('2d'), ctx = drawCanvas.getContext('2d');
   const btnAddText = $('btnAddText'), btnDoneText = $('btnDoneText'), btnDeleteText = $('btnDeleteText');
+  
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const TAU = Math.PI * 2;
-  const MAX_WIDTH = { '1/1': 600, '4/5': 480, '9/16': 340 };      // 비율별 사진칸 최대 가로(px)
+  const MAX_WIDTH = { '1/1': 600, '4/5': 480, '9/16': 340 };
   const MAX_HISTORY = 20;
-  const FONTS = {                                                  // 글꼴이 없는 컴퓨터에서는 뒤쪽 글꼴로 대신 표시
+  const FONTS = {
     gothic: "'Pretendard', 'Malgun Gothic', 'Noto Sans KR', sans-serif",
     myeongjo: "'Batang', '바탕', 'Noto Serif KR', 'AppleMyungjo', serif",
     gulim: "'Gulim', '굴림', 'Dotum', '돋움', 'Noto Sans KR', sans-serif",
     gungsuh: "'Gungsuh', '궁서', 'GungsuhChe', 'Noto Serif KR', serif",
   };
 
-  let hue = 0, lightness = 50, color;                              // 현재 색 (색상 0~360, 명도 0~100)
-  let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];   // 사용기록 (최대 5개)
-  let drag = null, grab = null, selected = false;                  // 드래그 대상: 'hue' | 'text' | 'rotate'
-  // 텍스트 상태 한 곳에 모아 두고 renderText()로 화면에 반영 (실행 취소 기록에도 이 값이 그대로 저장됨)
+  // 이모지 리스트
+  const EMOJIS = ['🥰','✨','🌸','🤑','💀','👻','👽','😸','🐕','🐳','🍓','🍋','🍎','🍭','🍫','💚'];
+  
+  let hue = 0, lightness = 50, color;
+  let recent = ['#FFFFFF', '#000000', '#E1002A', '#004488', '#FF7A00'];
+  let drag = null, grab = null, selected = false, emojiSelected = false;
+  
+  // 상태 관리
   const T = { shown: false, content: '텍스트를 입력하세요', size: 40, color: null, x: 50, y: 50, rot: 0, font: 'gothic' };
+  const E = { shown: false, content: '', size: 50, x: 50, y: 50 }; // 이모지 상태
 
-  let mode = null, brushType = 'pen', brushSize = 4, eraserSize = 20;   // 그리기 모드: 'draw' | 'erase' | null
+  let mode = null, brushType = 'pen', brushSize = 4, eraserSize = 20;
   let isDrawing = false, lastX = 0, lastY = 0, stampX = 0, stampY = 0;
   let baseImage = null, drawingReference = null, restoreToken = 0;
   let canvasHistory = [], historyStep = -1;
@@ -289,8 +317,38 @@
   document.querySelectorAll('.accordion-header').forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   document.querySelectorAll('[data-soon]').forEach(el => el.onclick = () => alert(el.dataset.soon));
 
-  /* ── 텍스트: 상태(T) → 화면 ── */
-  function renderText(w = wrap.clientWidth) {                      // w: 사진칸 가로 (글자 크기는 600px 기준으로 비례)
+  /* ── 이모지 그리드 초기화 ── */
+  EMOJIS.forEach(emoji => {
+    const div = document.createElement('div');
+    div.className = 'emoji-item';
+    div.textContent = emoji;
+    div.onclick = () => {
+      E.content = emoji;
+      E.shown = true;
+      E.x = 50; E.y = 50; E.size = 50; // 중앙에 생성
+      emojiSelected = true;
+      selected = false; // 텍스트 선택 해제
+      renderText(); renderEmoji();
+      saveHistory(false);
+    };
+    emojiGrid.appendChild(div);
+  });
+
+  /* ── 이모지 렌더링 ── */
+  function renderEmoji(w = wrap.clientWidth) {
+    emojiBody.textContent = E.content;
+    Object.assign(emojiLayer.style, {
+      display: E.shown ? 'block' : 'none',
+      left: E.x + '%',
+      top: E.y + '%',
+      fontSize: E.size * w / 600 + 'px',
+      transform: `translate(-50%, -50%)` // 회전 없음
+    });
+    emojiLayer.classList.toggle('selected', emojiSelected && E.shown);
+  }
+
+  /* ── 텍스트 렌더링 ── */
+  function renderText(w = wrap.clientWidth) {
     textBody.textContent = T.content;
     Object.assign(text.style, {
       display: T.shown ? 'block' : 'none', left: T.x + '%', top: T.y + '%', color: T.color,
@@ -298,13 +356,13 @@
     });
     text.classList.toggle('selected', selected && T.shown);
     document.querySelectorAll('.font-item').forEach(b => b.classList.toggle('active', b.dataset.font === T.font));
-    btnAddText.disabled = T.shown;                                 // 글자를 쓰는 중에는 '완료' 만, 끝나면 '텍스트 추가' 만 누를 수 있음
+    btnAddText.disabled = T.shown;
     btnDoneText.disabled = btnDeleteText.disabled = !T.shown;
   }
 
-  /* ── 캔버스 / 실행 취소·다시 실행 ── */
+  /* ── 캔버스 / 실행 취소 ── */
   const cloneCanvas = src => { const c = Object.assign(document.createElement('canvas'), { width: src.width, height: src.height }); c.getContext('2d').drawImage(src, 0, 0); return c; };
-  const fitBox = (sw, sh, dw, dh) => { const s = Math.min(dw / sw, dh / sh); return [(dw - sw * s) / 2, (dh - sh * s) / 2, sw * s, sh * s]; };   // contain 배치
+  const fitBox = (sw, sh, dw, dh) => { const s = Math.min(dw / sw, dh / sh); return [(dw - sw * s) / 2, (dh - sh * s) / 2, sw * s, sh * s]; };
   const resizeCanvases = (w, h) => { bgCanvas.width = drawCanvas.width = w; bgCanvas.height = drawCanvas.height = h; };
   const setRatio = v => { wrap.style.aspectRatio = v; wrap.style.maxWidth = MAX_WIDTH[v] + 'px'; };
 
@@ -314,8 +372,13 @@
   }
 
   function saveHistory(updateRef = false) {
-    canvasHistory = canvasHistory.slice(0, historyStep + 1);       // 되돌린 상태에서 새로 하면 뒤쪽 기록 삭제
-    canvasHistory.push({ drawData: drawCanvas.toDataURL('image/png'), width: drawCanvas.width, height: drawCanvas.height, ratio: ratioSelect.value, text: { ...T } });
+    canvasHistory = canvasHistory.slice(0, historyStep + 1);
+    canvasHistory.push({ 
+      drawData: drawCanvas.toDataURL('image/png'), 
+      width: drawCanvas.width, height: drawCanvas.height, ratio: ratioSelect.value, 
+      text: { ...T }, 
+      emoji: { ...E } 
+    });
     if (canvasHistory.length > MAX_HISTORY) canvasHistory.shift();
     historyStep = canvasHistory.length - 1;
     if (updateRef || !drawingReference) drawingReference = cloneCanvas(drawCanvas);
@@ -332,13 +395,19 @@
     setRatio(s.ratio);
     resizeCanvases(s.width, s.height);
     renderBackground();
-    Object.assign(T, s.text);                                      // 글자 내용·크기·색·위치·회전·글꼴을 한 번에 복원
+    
+    Object.assign(T, s.text);
     textInput.value = T.content;
     renderText(s.width);
 
+    if (s.emoji) {
+      Object.assign(E, s.emoji);
+      renderEmoji(s.width);
+    }
+
     const im = new Image();
     im.onload = im.onerror = () => {
-      if (token !== restoreToken) return;                          // 빠르게 되돌리는 중 오래된 그림이 덮어쓰지 않게
+      if (token !== restoreToken) return;
       ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       if (im.naturalWidth) ctx.drawImage(im, 0, 0, drawCanvas.width, drawCanvas.height);
       drawingReference = cloneCanvas(drawCanvas);
@@ -355,7 +424,7 @@
   btnUndo.onclick = () => moveHistory(-1);
   btnRedo.onclick = () => moveHistory(1);
 
-  function initCanvas() {                                          // 새 사진·삭제는 새 작업으로 보고 기록을 처음부터
+  function initCanvas() {
     restoreToken++;
     renderBackground();
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
@@ -365,7 +434,7 @@
     saveHistory(true);
   }
 
-  /* ── 사진 불러오기 / 삭제 / 비율 ── */
+  /* ── 사진 불러오기 ── */
   function showPhoto(on) {
     label.style.display = on ? 'none' : 'flex';
     btnDelete.hidden = !on;
@@ -394,15 +463,15 @@
 
   ratioSelect.onchange = () => {
     const v = ratioSelect.value, [rw, rh] = v.split('/').map(Number);
-    const src = drawingReference || cloneCanvas(drawCanvas);       // 크기를 바꾸기 전에 펜 그림 원본 확보
+    const src = drawingReference || cloneCanvas(drawCanvas);
     setRatio(v);
-    // 칸 너비에는 0.3초 전환 애니메이션이 있어서, 현재 너비 대신 목표 너비로 계산
     const w = Math.max(1, Math.round(Math.min(MAX_WIDTH[v], wrap.parentElement.clientWidth)));
     restoreToken++;
     resizeCanvases(w, Math.max(1, Math.round(w * rh / rw)));
     renderBackground();
-    ctx.drawImage(src, ...fitBox(src.width, src.height, drawCanvas.width, drawCanvas.height));   // 펜 그림은 찌그러지지 않게 비율 유지
+    ctx.drawImage(src, ...fitBox(src.width, src.height, drawCanvas.width, drawCanvas.height));
     renderText(w);
+    renderEmoji(w);
     saveHistory(false);
   };
 
@@ -429,9 +498,9 @@
     renderText();
   }
   const updateColor = () => applyColor(hslToHex(hue, 100, lightness));
-  const renderTrack = () => lightInput.style.background = `linear-gradient(to right, #000, hsl(${hue}, 100%, 50%), #fff)`;   // 밝기 막대: 검정 → 선택한 색 → 흰색
+  const renderTrack = () => lightInput.style.background = `linear-gradient(to right, #000, hsl(${hue}, 100%, 50%), #fff)`;
 
-  function remember(c) {                                           // 맨 앞으로 올리고 5개까지만 유지
+  function remember(c) {
     recent = [c, ...recent.filter(x => x !== c)].slice(0, 5);
     historyEl.replaceChildren(...recent.map(c => {
       const d = document.createElement('div');
@@ -441,12 +510,12 @@
       return d;
     }));
   }
-  function pick(e) {                                               // 도넛 영역만 색상으로 인식
+  function pick(e) {
     const r = wheel.getBoundingClientRect();
     const x = e.clientX - r.left - r.width / 2, y = r.top + r.height / 2 - e.clientY;
     const dist = Math.hypot(x, y);
     if (dist <= 35 || dist > r.width / 2) return false;
-    hue = (90 - Math.atan2(y, x) * 180 / Math.PI + 360) % 360;    // CSS 색상환의 각도와 HSL 색상값을 대응
+    hue = (90 - Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
     renderTrack();
     updateColor();
     return true;
@@ -455,14 +524,16 @@
   lightInput.oninput = () => { lightness = +lightInput.value; updateColor(); };
   lightInput.onchange = () => remember(color);
 
-  /* ── 텍스트: 추가 / 크기 / 글꼴 / 선택·이동·회전 / 삭제 ── */
+  /* ── 텍스트 추가 / 이모지 선택 해제 로직 ── */
   btnAddText.onclick = () => {
-    Object.assign(T, { content: textInput.value || '텍스트를 입력하세요', size: 40, x: 50, y: 50, rot: 0, color, shown: true });   // 새 글자는 가운데·0°에서 시작
+    Object.assign(T, { content: textInput.value || '텍스트를 입력하세요', size: 40, x: 50, y: 50, rot: 0, color, shown: true });
     selected = true;
+    emojiSelected = false;
     renderText();
+    renderEmoji();
     saveHistory(false);
   };
-  btnDoneText.onclick = () => {                                    // 완료: 글자를 그림 위에 확정 → 색·위치 고정, 글자칸이 사라져 펜이 어디서나 닿음
+  btnDoneText.onclick = () => {
     if (!T.shown) return;
     drawText(ctx, drawCanvas.width, drawCanvas.height);
     T.shown = selected = false;
@@ -472,54 +543,103 @@
   textInput.oninput = () => { T.content = textInput.value; renderText(); };
   textInput.onchange = () => saveHistory(false);
   document.querySelectorAll('.font-item').forEach(b => {
-    b.style.fontFamily = FONTS[b.dataset.font];                    // 버튼 글자를 각 글꼴로 미리 보여줌
+    b.style.fontFamily = FONTS[b.dataset.font];
     b.onclick = () => { T.font = b.dataset.font; renderText(); saveHistory(false); };
   });
 
   const TEXT_DRAGS = ['text', 'rotate', 'resize'];
   const textPose = () => `${T.x}|${T.y}|${T.rot}|${T.size}`;
   text.addEventListener('mousedown', e => {
+    if (mode) return; // 그리기 모드 중 무시
     e.preventDefault();
-    document.activeElement.blur();                                 // 입력칸에 커서가 있어도 Delete 키가 글자 삭제로 동작하게
+    document.activeElement.blur();
     selected = true;
-    drag = e.target === handle ? 'rotate' : e.target.dataset.corner ? 'resize' : 'text';   // 위쪽 휠 = 회전, 모서리 = 크기, 그 외 = 이동
+    emojiSelected = false;
+    drag = e.target === handle ? 'rotate' : e.target.dataset.corner ? 'resize' : 'text';
     const r = wrap.getBoundingClientRect(), cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
     grab = { x: e.clientX - cx, y: e.clientY - cy, dist: Math.hypot(e.clientX - cx, e.clientY - cy), size: T.size, pose: textPose() };
     renderText();
+    renderEmoji();
   });
-  document.addEventListener('mousedown', e => {                    // 사진칸 쪽 빈 곳을 누르면 선택 해제 (오른쪽 패널은 유지)
+
+  /* ── 이모지 조작 이벤트 ── */
+  emojiLayer.addEventListener('mousedown', e => {
+    if (mode) return; // 그리기 모드 중 무시
+    e.preventDefault();
+    document.activeElement.blur();
+    emojiSelected = true;
+    selected = false;
+    drag = e.target.dataset.corner ? 'emoji-resize' : 'emoji';
+    
+    const r = wrap.getBoundingClientRect(), cx = r.left + E.x / 100 * r.width, cy = r.top + E.y / 100 * r.height;
+    grab = { 
+      x: e.clientX - cx, 
+      y: e.clientY - cy, 
+      dist: Math.hypot(e.clientX - cx, e.clientY - cy), 
+      size: E.size, 
+      pose: `${E.x}|${E.y}|${E.size}` 
+    };
+    renderText();
+    renderEmoji();
+  });
+
+  document.addEventListener('mousedown', e => {
     if (selected && e.target.closest('.center-panel') && !text.contains(e.target)) { selected = false; renderText(); }
+    if (emojiSelected && e.target.closest('.center-panel') && !emojiLayer.contains(e.target)) { emojiSelected = false; renderEmoji(); }
   });
-  function deleteText() {                                          // 삭제 버튼 · Delete 키 공용: 쓰는 중인 글자를 지움
+
+  function deleteText() {
     if (!T.shown) return;
-    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });      // 다음에 추가할 글자는 가운데·0°에서 시작
+    Object.assign(T, { shown: false, x: 50, y: 50, rot: 0 });
     selected = false;
     renderText();
     saveHistory(false);
   }
   btnDeleteText.onclick = deleteText;
   document.addEventListener('keydown', e => {
-    if (e.key === 'Delete' && selected && !e.target.closest('input, select, textarea')) deleteText();
+    if (e.key === 'Delete' && !e.target.closest('input, select, textarea')) {
+      if (selected) deleteText();
+      if (emojiSelected && E.shown) {
+        E.shown = false; emojiSelected = false; renderEmoji(); saveHistory(false);
+      }
+    }
   });
 
   window.addEventListener('mousemove', e => {
     if (drag === 'hue') return pick(e);
-    if (!TEXT_DRAGS.includes(drag)) return;
-    const r = wrap.getBoundingClientRect(), cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
+    
+    const r = wrap.getBoundingClientRect();
+    const cx = r.left + T.x / 100 * r.width, cy = r.top + T.y / 100 * r.height;
+    const ecx = r.left + E.x / 100 * r.width, ecy = r.top + E.y / 100 * r.height;
+
     if (drag === 'text') {
       T.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
       T.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
-    } else if (drag === 'rotate') {                                // 글자 중심에서 마우스까지의 각도 (바로 위 = 0°, 360° 전체 회전)
+      renderText();
+    } else if (drag === 'rotate') {
       T.rot = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 450) % 360);
-    } else {                                                       // 모서리: 중심에서 멀어진 비율만큼 글자 크기 조절
+      renderText();
+    } else if (drag === 'resize') {
       T.size = clamp(Math.round(grab.size * Math.hypot(e.clientX - cx, e.clientY - cy) / grab.dist), 10, 300);
+      renderText();
+    } 
+    else if (drag === 'emoji') {
+      E.x = clamp((e.clientX - grab.x - r.left) / r.width * 100, 0, 100);
+      E.y = clamp((e.clientY - grab.y - r.top) / r.height * 100, 0, 100);
+      renderEmoji();
+    } 
+    else if (drag === 'emoji-resize') {
+      E.size = clamp(Math.round(grab.size * Math.hypot(e.clientX - ecx, e.clientY - ecy) / grab.dist), 20, 300);
+      renderEmoji();
     }
-    renderText();
   });
+
   window.addEventListener('mouseup', () => {
     if (drag === 'hue') remember(color);
-    if (isDrawing) saveHistory(true);                              // 그림은 펜 그림 원본도 갱신
-    else if (TEXT_DRAGS.includes(drag) && textPose() !== grab.pose) saveHistory(false);   // 클릭만 한 경우는 기록 안 함
+    if (isDrawing) saveHistory(true);
+    else if (TEXT_DRAGS.includes(drag) && textPose() !== grab.pose) saveHistory(false);
+    else if (drag === 'emoji' && `${E.x}|${E.y}|${E.size}` !== grab.pose) saveHistory(false);
+    else if (drag === 'emoji-resize' && `${E.x}|${E.y}|${E.size}` !== grab.pose) saveHistory(false);
     drag = null;
     isDrawing = false;
   });
@@ -595,7 +715,7 @@
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = brushSize * .4;
         line(x, y);
-      } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {   // 하트·별: 25px 간격으로 도장 찍기
+      } else if (isStart || Math.hypot(x - stampX, y - stampY) > 25) {
         stampX = x; stampY = y;
         ctx.translate(x, y);
         ctx.rotate(Math.random() * TAU);
@@ -621,7 +741,6 @@
     lastX = x; lastY = y;
   });
 
-  /* ── 글자를 캔버스에 그리기 (완료 · 완성본 공용): 글꼴 + 회전 반영, 그림자도 같이 회전 ── */
   function drawText(g, W, H) {
     const a = T.rot * Math.PI / 180;
     g.save();
@@ -635,18 +754,30 @@
     g.restore();
   }
 
-  /* ── 완성본 ① 사진칸에 보이는 그대로 (사진 + 그림 + 글자) ── */
+  function drawEmoji(g, W, H) {
+    if (!E.shown) return;
+    g.save();
+    g.translate(E.x / 100 * W, E.y / 100 * H);
+    g.font = `${E.size * W / 600}px serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    // 이모지 자체의 그림자 효과 (선택사항)
+    // g.shadowColor = 'rgba(0,0,0,0.5)'; g.shadowBlur = 4; g.shadowOffsetX = 2; g.shadowOffsetY = 2;
+    g.fillText(E.content, 0, 0);
+    g.restore();
+  }
+
   function capture() {
     if (!baseImage) { alert('먼저 이미지를 불러와주세요!'); return null; }
     const c = Object.assign(document.createElement('canvas'), { width: drawCanvas.width, height: drawCanvas.height });
     const g = c.getContext('2d');
     g.drawImage(bgCanvas, 0, 0);
     g.drawImage(drawCanvas, 0, 0);
-    if (T.shown) drawText(g, c.width, c.height);                   // 쓰는 중인 글자도 화면에 보이는 그대로 포함
+    if (T.shown) drawText(g, c.width, c.height);
+    if (E.shown) drawEmoji(g, c.width, c.height);
     return c;
   }
 
-  /* ── 완성본 ② 인스타 피드 전체 (헤더 + 정사각형 사진 + 아이콘·문구, 버튼 제외) ── */
   function drawFeed(card) {
     const W = 400, HEAD = 60, PIC = 400;
     const c = Object.assign(document.createElement('canvas'), { width: W, height: HEAD + PIC + 110 });
@@ -656,17 +787,17 @@
     g.textAlign = 'left';
     g.textBaseline = 'middle';
 
-    g.fillStyle = '#f0f0f0';                                       // 헤더
+    g.fillStyle = '#f0f0f0';
     g.beginPath(); g.arc(35, 30, 18, 0, TAU); g.fill();
     g.fillStyle = '#000';
     g.font = '16px Arial'; g.fillText('🦋', 27, 31);
     g.font = 'bold 14px "Pretendard", sans-serif'; g.fillText('ALEPH_Studio', 65, 31);
     g.fillStyle = '#eee'; g.fillRect(0, HEAD - 1, W, 1);
 
-    const m = Math.min(card.width, card.height);                   // 사진: 가운데 기준 정사각형으로 잘라 채움
+    const m = Math.min(card.width, card.height);
     g.drawImage(card, (card.width - m) / 2, (card.height - m) / 2, m, m, 0, HEAD, PIC, PIC);
 
-    const y = HEAD + PIC;                                          // 아이콘 → 캡션 → 태그
+    const y = HEAD + PIC;
     g.fillStyle = '#000'; g.font = '20px Arial';
     ['❤️', '💬', '✈️'].forEach((e, i) => g.fillText(e, 15 + i * 35, y + 25));
     g.font = 'bold 13px "Pretendard", sans-serif'; g.fillText('ALEPH_Studio', 15, y + 60);
@@ -676,7 +807,7 @@
   }
 
   const save = (canvas, name) => Object.assign(document.createElement('a'), { href: canvas.toDataURL('image/png'), download: name }).click();
-  let lastCard = null;                                             // 피드에 올린 짤
+  let lastCard = null;
   $('btnDirectDownload').onclick = () => { const c = capture(); if (c) save(c, 'card_studio_image.png'); };
   $('btnComplete').onclick = () => {
     const c = capture();
@@ -692,6 +823,9 @@
   remember('#FFFFFF');
   renderTrack();
   updateColor();
+  
+  // 이모지 초기 상태 렌더링
+  renderEmoji();
 </script>
 </body>
 </html>
